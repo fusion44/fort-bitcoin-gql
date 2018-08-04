@@ -7,14 +7,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import graphene
 
 import backend.btc.schema_node
+import backend.lnd.schema
 import backend.stats.schema
 
 
-class Query(backend.btc.schema_node.Query, backend.stats.schema.Query,
-            graphene.ObjectType):
+class Query(backend.btc.schema_node.Query, backend.lnd.schema.Query,
+            backend.stats.schema.Query, graphene.ObjectType):
     # This class will inherit from multiple Queries
     # as we begin to add more apps to our project
     pass
 
 
-schema = graphene.Schema(query=Query)
+schema = graphene.Schema(query=Query, mutation=backend.lnd.schema.LnMutations)
