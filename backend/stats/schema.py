@@ -11,7 +11,7 @@ import graphql
 
 import backend.stats.types as types
 import backend.stats.utils as utils
-
+from backend.exceptions import ClientVisibleException
 
 class Query(graphene.ObjectType):
     """Contains all system status related queries"""
@@ -25,24 +25,28 @@ class Query(graphene.ObjectType):
         selections = field.selection_set.selections
 
         sys_info = types.SystemStatusType()
-
-        for selection in selections:  # type: graphene.Field
-            name = selection.name.value
-            if name == "uptime":
-                sys_info.uptime = utils.get_system_uptime()
-            elif name == "cpuLoad":
-                sys_info.cpu_load = utils.get_system_cpu_load()
-            elif name == "trafficIn":
-                sys_info.traffic_in = utils.get_system_traffic_in()
-            elif name == "trafficOut":
-                sys_info.traffic_out = utils.get_system_traffic_out()
-            elif name == "memoryUsed":
-                sys_info.memory_used = utils.get_system_mem_used()
-            elif name == "memoryFree":
-                sys_info.memory_free = utils.get_system_mem_free()
-            elif name == "memoryAvailable":
-                sys_info.memory_available = utils.get_system_mem_available()
-            elif name == "memoryTotal":
-                sys_info.memory_total = utils.get_system_mem_total()
-
+        try:
+            for selection in selections:  # type: graphene.Field
+                name = selection.name.value
+                if name == "uptime":
+                    sys_info.uptime = utils.get_system_uptime()
+                elif name == "cpuLoad":
+                    sys_info.cpu_load = utils.get_system_cpu_load()
+                elif name == "trafficIn":
+                    sys_info.traffic_in = utils.get_system_traffic_in()
+                elif name == "trafficOut":
+                    sys_info.traffic_out = utils.get_system_traffic_out()
+                elif name == "memoryUsed":
+                    sys_info.memory_used = utils.get_system_mem_used()
+                elif name == "memoryFree":
+                    sys_info.memory_free = utils.get_system_mem_free()
+                elif name == "memoryAvailable":
+                    sys_info.memory_available = utils.get_system_mem_available()
+                elif name == "memoryTotal":
+                    sys_info.memory_total = utils.get_system_mem_total()
+        except ClientVisibleException as error:
+            raise graphql.GraphQLError(error.message)
+        except Exception as error:
+            raise graphql.GraphQLError("An unknown exception occurred")
+        
         return sys_info
