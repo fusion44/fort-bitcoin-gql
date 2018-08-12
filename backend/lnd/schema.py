@@ -10,6 +10,7 @@ from google.protobuf.json_format import MessageToJson
 import backend.lnd.rpc_pb2 as ln
 import backend.lnd.rpc_pb2_grpc as lnrpc
 import backend.lnd.types as types
+import backend.exceptions as exceptions
 from backend.lnd.utils import ChannelData, build_grpc_channel
 """A simple GraphQL API for the c-lightning software
 For a full description of all available API"s see https://github.com/ElementsProject/lightning
@@ -26,6 +27,9 @@ class Query(graphene.ObjectType):
         testnet=graphene.Boolean())
 
     def resolve_ln_get_info(self, info, **kwargs):
+        if not info.context.user.is_authenticated:
+            raise exceptions.unauthenticated()
+
         testnet = kwargs.get("testnet")
         channel_data = build_grpc_channel(testnet)
         stub = lnrpc.LightningStub(channel_data.channel)
@@ -45,6 +49,8 @@ class Query(graphene.ObjectType):
             description="The payment request string to be decoded"))
 
     def resolve_ln_decode_pay_req(self, info, **kwargs):
+        if not info.context.user.is_authenticated:
+            raise exceptions.unauthenticated()
         testnet = kwargs.get("testnet")
         pay_req = kwargs.get("pay_req")
         channel_data = build_grpc_channel(testnet)
@@ -113,6 +119,9 @@ class SendPayment(graphene.Mutation):
                payment_request: str = "",
                final_cltv_delta: int = 0,
                fee_limit: types.LnFeeLimit = None):
+
+        if not info.context.user.is_authenticated:
+            raise exceptions.unauthenticated()
 
         channel_data = build_grpc_channel(testnet)
         stub = lnrpc.LightningStub(channel_data.channel)

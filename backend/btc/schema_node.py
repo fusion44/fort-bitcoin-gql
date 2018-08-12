@@ -9,6 +9,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import graphene
 
 import backend.btc.types as types
+import backend.exceptions as exceptions
 from .utils import make_rpc_auth_url
 
 
@@ -22,6 +23,9 @@ class Query(graphene.ObjectType):
         """bitcoin-cli getblockchaininfo
         https://bitcoin.org/en/developer-reference#getblockchaininfo
         """
+
+        if not info.context.user.is_authenticated:
+            raise exceptions.unauthenticated()
 
         testnet = kwargs.get("testnet")
         output = make_rpc_auth_url(testnet).getblockchaininfo()
@@ -50,6 +54,9 @@ class Query(graphene.ObjectType):
         https://bitcoin.org/en/developer-reference#getmininginfo
         """
 
+        if not info.context.user.is_authenticated:
+            raise exceptions.unauthenticated()
+
         testnet = kwargs.get("testnet")
         output = make_rpc_auth_url(testnet).getmininginfo()
         info = types.MiningInfoType()
@@ -70,6 +77,9 @@ class Query(graphene.ObjectType):
         """bitcoin-cli getnetworkinfo
         https://bitcoin.org/en/developer-reference#getnetworkinfo
         """
+
+        if not info.context.user.is_authenticated:
+            raise exceptions.unauthenticated()
 
         testnet = kwargs.get("testnet")
         output = make_rpc_auth_url(testnet).getnetworkinfo()
@@ -96,6 +106,9 @@ class Query(graphene.ObjectType):
         """bitcoin-cli getwalletinfo
         https://bitcoin.org/en/developer-reference#getwalletinfo
         """
+
+        if not info.context.user.is_authenticated:
+            raise exceptions.unauthenticated()
 
         testnet = kwargs.get("testnet")
         output = make_rpc_auth_url(testnet).getwalletinfo()
