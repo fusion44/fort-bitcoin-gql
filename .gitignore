@@ -1,5 +1,6 @@
 # Custom ignores
 config.ini
+htmlcov
 
 # Created by https://www.gitignore.io/api/linux,django,python,visualstudiocode
 

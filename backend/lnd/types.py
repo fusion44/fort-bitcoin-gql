@@ -47,6 +47,13 @@ class LnInfoType(graphene.ObjectType):
 
 class LnHopHint(graphene.ObjectType):
     """https://api.lightning.community/?python#hophint"""
+
+    def __init__(self, data: dict):
+        super().__init__()
+        for attr in self.__dict__.keys():  # type: str
+            if attr in data:
+                setattr(self, attr, data[attr])
+
     node_id = graphene.String(
         description="The public key of the node at the start of the channel.")
     chan_id = graphene.Int(description="The unique identifier of the channel.")
