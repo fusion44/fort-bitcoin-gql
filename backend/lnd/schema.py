@@ -12,6 +12,7 @@ import backend.lnd.rpc_pb2_grpc as lnrpc
 import backend.lnd.types as types
 import backend.exceptions as exceptions
 from backend.lnd.utils import ChannelData, build_grpc_channel
+from grpc import RpcError
 """A simple GraphQL API for the c-lightning software
 For a full description of all available API"s see https://github.com/ElementsProject/lightning
 """
@@ -126,8 +127,14 @@ class SendPayment(graphene.Mutation):
         channel_data = build_grpc_channel(testnet)
         stub = lnrpc.LightningStub(channel_data.channel)
         request = ln.SendRequest(payment_request=payment_request)
-        response = stub.SendPaymentSync(
-            request, metadata=[('macaroon', channel_data.macaroon)])
+        try:
+            response = stub.SendPaymentSync(
+                request, metadata=[('macaroon', channel_data.macaroon)])
+        except RpcError as e:
+            return SendPayment(
+                payment_error=e.details(),  # pylint: disable=E1101
+                payment_preimage="",
+                payment_route=None)
 
         json_data = json.loads(MessageToJson(response))
         if response.payment_error is not "":
