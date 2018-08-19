@@ -165,3 +165,22 @@ def test_ln_route():
 def test_ln_route_hint():
     inst = types.LnRouteHint()
     assert inst
+
+
+def test_ln_channel_balance():
+    inst = types.LnChannelBalance({"balance": 1, "pending_open_balance": 2})
+    assert inst
+    inst.balance == 1
+    inst.pending_open_balance == 2
+
+
+def test_ln_wallet_balance():
+    inst = types.LnWalletBalance({
+        "total_balance": 1,
+        "confirmed_balance": 2,
+        "unconfirmed_balance": 3
+    })
+    assert inst
+    assert inst.total_balance == 1
+    assert inst.confirmed_balance == 2
+    assert inst.unconfirmed_balance == 3

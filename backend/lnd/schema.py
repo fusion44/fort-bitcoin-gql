@@ -40,6 +40,46 @@ class Query(graphene.ObjectType):
         json_data = json.loads(MessageToJson(response))
         return types.LnInfoType(json_data)
 
+    ln_get_channel_balance = graphene.Field(
+        types.LnChannelBalance,
+        description=
+        "ChannelBalance returns the total funds available across all open channels in satoshis.",
+        testnet=graphene.Boolean(),
+    )
+
+    def resolve_ln_get_channel_balance(self, info, **kwargs):
+        """https://api.lightning.community/#channelbalance"""
+        if not info.context.user.is_authenticated:
+            raise exceptions.unauthenticated()
+        testnet = kwargs.get("testnet")
+        channel_data = build_grpc_channel(testnet)
+        stub = lnrpc.LightningStub(channel_data.channel)
+        request = ln.ChannelBalanceRequest()
+        response = stub.ChannelBalance(
+            request, metadata=[('macaroon', channel_data.macaroon)])
+        json_data = json.loads(MessageToJson(response))
+        return types.LnChannelBalance(json_data)
+
+    ln_get_wallet_balance = graphene.Field(
+        types.LnWalletBalance,
+        description=
+        "WalletBalance returns total unspent outputs(confirmed and unconfirmed), all confirmed unspent outputs and all unconfirmed unspent outputs under control of the wallet.",
+        testnet=graphene.Boolean(),
+    )
+
+    def resolve_ln_get_wallet_balance(self, info, **kwargs):
+        """https://api.lightning.community/#walletbalance"""
+        if not info.context.user.is_authenticated:
+            raise exceptions.unauthenticated()
+        testnet = kwargs.get("testnet")
+        channel_data = build_grpc_channel(testnet)
+        stub = lnrpc.LightningStub(channel_data.channel)
+        request = ln.WalletBalanceRequest()
+        response = stub.WalletBalance(
+            request, metadata=[('macaroon', channel_data.macaroon)])
+        json_data = json.loads(MessageToJson(response))
+        return types.LnWalletBalance(json_data)
+
     ln_decode_pay_req = graphene.Field(
         types.LnPayReqType,
         description=
@@ -113,7 +153,9 @@ class SendPayment(graphene.Mutation):
     payment_preimage = graphene.String(description="Preimage of the payment")
     payment_route = graphene.Field(types.LnRoute)
 
-    def mutate(self,
+    @classmethod
+    def mutate(cls,
+               root,
                info,
                testnet: bool = True,
                payment_raw: types.LnRawPaymentInput = None,

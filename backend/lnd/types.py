@@ -45,6 +45,43 @@ class LnInfoType(graphene.ObjectType):
     )
 
 
+class LnChannelBalance(graphene.ObjectType):
+    """https://api.lightning.community/#channelbalance"""
+
+    def __init__(self, data: dict):
+        super().__init__()
+        for attr in self.__dict__.keys():  # type: str
+            if attr in data:
+                setattr(self, attr, data[attr])
+
+    balance = graphene.Int(
+        description="Sum of channels balances denominated in satoshis",
+        default_value=0)
+    pending_open_balance = graphene.Int(
+        description="Sum of channels pending balances denominated in satoshis",
+        default_value=0)
+
+
+class LnWalletBalance(graphene.ObjectType):
+    """https://api.lightning.community/#walletbalance"""
+
+    def __init__(self, data: dict):
+        super().__init__()
+        for attr in self.__dict__.keys():  # type: str
+            if attr in data:
+                setattr(self, attr, data[attr])
+
+    total_balance = graphene.Int(
+        description="The balance of the wallet", default_value=0)
+    confirmed_balance = graphene.Int(
+        description=
+        "The confirmed balance of a wallet(with >= 1 confirmations)",
+        default_value=0)
+    unconfirmed_balance = graphene.Int(
+        description="The unconfirmed balance of a wallet(with 0 confirmations)",
+        default_value=0)
+
+
 class LnHopHint(graphene.ObjectType):
     """https://api.lightning.community/?python#hophint"""
 
