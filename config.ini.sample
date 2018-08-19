@@ -1,34 +1,75 @@
 [DEFAULT]
-SECRET_KEY = 'your_secret_key'    # Used in settings.py
+# Used in settings.py
+SECRET_KEY = 'your_secret_key'
 
 [BITCOIND_MAINNET]
-btc_rpc_use_https=false           # Boolean: True, False
-btc_rpc_username=your_username    # RPC username 
-btc_rpc_password=your_password    # RPC password
-btc_rpc_ip=127.0.0.1              # IP address of the node
-btc_rpc_port=8332                 # Port of the node
+# Boolean: True, False
+btc_rpc_use_https=false
+
+# RPC username
+btc_rpc_username=your_username
+
+# RPC password     
+btc_rpc_password=your_password
+
+# IP address of the node
+btc_rpc_ip=127.0.0.1
+
+# Port of the node
+btc_rpc_port=8332
 
 [BITCOIND_TESTNET]
-btc_rpc_use_https=false           # Boolean: True, False
-btc_rpc_username=your_username    # RPC username 
-btc_rpc_password=your_password    # RPC password
-btc_rpc_ip=127.0.0.1              # IP address of the node
-btc_rpc_port=18332                 # Port of the node
+# Boolean: True, False
+btc_rpc_use_https=false
+
+# RPC username
+btc_rpc_username=your_username
+
+# RPC password
+btc_rpc_password=your_password
+
+# IP address of the node
+btc_rpc_ip=127.0.0.1
+
+# Port of the node
+btc_rpc_port=18332
 
 [LND_MAINNET]
-rpc_server=127.0.0.1              # IP address of the node
-rpc_port=10009                    # Port of the node
-lnd_cert_file=/path/to/tls.cert   # LND cert file (e.g. /home/username/.lnd/tls.cert)
+# IP address of the node
+rpc_server=127.0.0.1
+
+# Port of the node
+rpc_port=10009
+
+# LND cert file (e.g. /home/username/.lnd/tls.cert)
+lnd_cert_file=/path/to/tls.cert
+
+# LND macaroon file for this account
+lnd_macaroon=/path/to/xx.macaroon
+
 
 [LND_TESTNET]
-rpc_server=127.0.0.1              # IP address of the node
-rpc_port=12009                    # Port of the node
-lnd_cert_file=/path/to/tls.cert   # LND cert file (e.g. /home/username/.lnd/tls.cert)
+# IP address of the node
+rpc_server=127.0.0.1
+
+# Port of the node
+rpc_port=12009
+
+# LND cert file (e.g. /home/username/.lnd/tls.cert)
+lnd_cert_file=/path/to/tls.cert
+
+# LND macaroon file for this account
+lnd_macaroon=/path/to/xx.macaroon
 
 [PROMETHEUS]
-prom_api_url=url                  # Top level URL to Prometheus  (e.g. http://192.168.x.xx/prometheus/)
-prom_user_name=username           # The NGINX basic_auth username. Set to None if unauthenticated
-prom_user_password=password       # The NGINX basic_auth password.
+# Top level URL to Prometheus  (e.g. http://192.168.x.xx/prometheus/)
+prom_api_url=url
+
+# The NGINX basic_auth username. Set to None if unauthenticated
+prom_user_name=username
+
+# The NGINX basic_auth password.
+prom_user_password=password       
 
 
 
