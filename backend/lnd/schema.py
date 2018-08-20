@@ -80,6 +80,27 @@ class Query(graphene.ObjectType):
         json_data = json.loads(MessageToJson(response))
         return types.LnWalletBalance(json_data)
 
+    ln_get_transactions = graphene.Field(
+        types.LnTransactionDetails,
+        description=
+        "GetTransactions returns a list describing all the known transactions relevant to the wallet.",
+        testnet=graphene.Boolean(),
+    )
+
+    def resolve_ln_get_transactions(self, info, **kwargs):
+        """https://api.lightning.community/?python#gettransactions"""
+        if not info.context.user.is_authenticated:
+            raise exceptions.unauthenticated()
+
+        testnet = kwargs.get("testnet")
+        channel_data = build_grpc_channel(testnet)
+        stub = lnrpc.LightningStub(channel_data.channel)
+        request = ln.GetTransactionsRequest()
+        response = stub.GetTransactions(
+            request, metadata=[('macaroon', channel_data.macaroon)])
+        json_data = json.loads(MessageToJson(response))
+        return types.LnTransactionDetails(json_data)
+
     ln_decode_pay_req = graphene.Field(
         types.LnPayReqType,
         description=

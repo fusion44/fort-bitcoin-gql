@@ -194,6 +194,45 @@ class LnPayReqType(graphene.ObjectType):
     route_hints = graphene.List(LnRouteHint)
 
 
+class LnTransaction(graphene.ObjectType):
+    def __init__(self, data: dict):
+        super().__init__()
+        for attr in self.__dict__.keys():  # type: str
+            if attr in data:
+                setattr(self, attr, data[attr])
+
+    tx_hash = graphene.String(description="The transaction hash")
+    amount = graphene.Int(
+        description="The transaction amount, denominated in satoshis",
+        default_value=0)
+    num_confirmations = graphene.Int(
+        description="The number of confirmations", default_value=0)
+    block_hash = graphene.String(
+        description="The hash of the block this transaction was included in")
+    block_height = graphene.Int(
+        description="The height of the block this transaction was included in",
+        default_value=0)
+    time_stamp = graphene.Int(
+        description="Timestamp of this transaction", default_value=0)
+    total_fees = graphene.Int(
+        description="Fees paid for this transaction", default_value=0)
+    dest_addresses = graphene.List(
+        graphene.String,
+        description="Addresses that received funds for this transaction")
+
+
+class LnTransactionDetails(graphene.ObjectType):
+    def __init__(self, data: dict):
+        super().__init__()
+        self.transactions = []
+        for ta in data["transactions"]:
+            self.transactions.append(LnTransaction(ta))
+
+    transactions = graphene.List(
+        LnTransaction,
+        description="The list of transactions relevant to the wallet.")
+
+
 class LnRawPaymentInput(graphene.InputObjectType):
     class Meta:
         description = "Describes a send payment request using components that make up a payment"

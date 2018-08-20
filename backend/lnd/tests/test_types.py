@@ -184,3 +184,51 @@ def test_ln_wallet_balance():
     assert inst.total_balance == 1
     assert inst.confirmed_balance == 2
     assert inst.unconfirmed_balance == 3
+
+
+def test_ln_transaction():
+    fake_transaction = {
+        'amount': fake.pyint(),
+        'block_hash': fake.sha256(),
+        'block_height': fake.pyint(),
+        'dest_addresses': [fake.sha256(), fake.sha256()],
+        'num_confirmations': fake.pyint(),
+        'time_stamp': fake.unix_time(),
+        'tx_hash': fake.sha256()
+    }
+    inst = types.LnTransaction(fake_transaction)
+
+    assert inst
+    assert inst.amount == fake_transaction["amount"]
+    assert inst.block_hash == fake_transaction["block_hash"]
+    assert inst.block_height == fake_transaction["block_height"]
+    assert len(inst.dest_addresses) == len(fake_transaction["dest_addresses"])
+    assert inst.dest_addresses[0] == fake_transaction["dest_addresses"][0]
+    assert inst.dest_addresses[1] == fake_transaction["dest_addresses"][1]
+    assert inst.num_confirmations == fake_transaction["num_confirmations"]
+    assert inst.time_stamp == fake_transaction["time_stamp"]
+    assert inst.tx_hash == fake_transaction["tx_hash"]
+
+
+def test_ln_transaction_details():
+    fake_transactions = [{
+        'amount': fake.pyint(),
+        'block_hash': fake.sha256(),
+        'block_height': fake.pyint(),
+        'dest_addresses': [fake.sha256(), fake.sha256()],
+        'num_confirmations': fake.pyint(),
+        'time_stamp': fake.unix_time(),
+        'tx_hash': fake.sha256()
+    }, {
+        'amount': fake.pyint(),
+        'block_hash': fake.sha256(),
+        'block_height': fake.pyint(),
+        'dest_addresses': [fake.sha256(), fake.sha256()],
+        'num_confirmations': fake.pyint(),
+        'time_stamp': fake.unix_time(),
+        'tx_hash': fake.sha256()
+    }]
+    inst = types.LnTransactionDetails({'transactions': fake_transactions})
+
+    assert inst
+    assert len(inst.transactions) == 2
