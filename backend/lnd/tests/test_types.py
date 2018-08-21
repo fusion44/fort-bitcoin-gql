@@ -232,3 +232,49 @@ def test_ln_transaction_details():
 
     assert inst
     assert len(inst.transactions) == 2
+
+
+def test_ln_payment():
+    payment = {
+        "payment_hash": fake.sha256(),
+        "value": fake.pyint(),
+        "creation_date": fake.unix_time(),
+        "path": [fake.sha256(), fake.sha256()],
+        "fee": fake.pyint(),
+        "payment_preimage": fake.sha256()
+    }
+
+    inst = types.LnPayment(payment)
+
+    assert inst
+    assert inst.payment_hash == payment["payment_hash"]
+    assert inst.value == payment["value"]
+    assert inst.creation_date == payment["creation_date"]
+    assert len(inst.path) == len(payment["path"])
+    assert inst.path[0] == payment["path"][0]
+    assert inst.path[1] == payment["path"][1]
+    assert inst.fee == payment["fee"]
+    assert inst.payment_preimage == payment["payment_preimage"]
+
+
+def test_ln_payment_response():
+    fake_payments = [{
+        "payment_hash": fake.sha256(),
+        "value": fake.pyint(),
+        "creation_date": fake.unix_time(),
+        "path": [fake.sha256(), fake.sha256()],
+        "fee": fake.pyint(),
+        "payment_preimage": fake.sha256()
+    }, {
+        "payment_hash": fake.sha256(),
+        "value": fake.pyint(),
+        "creation_date": fake.unix_time(),
+        "path": [fake.sha256(), fake.sha256()],
+        "fee": fake.pyint(),
+        "payment_preimage": fake.sha256()
+    }]
+
+    inst = types.LnListPaymentsResponse({'payments': fake_payments})
+
+    assert inst
+    assert len(inst.payments) == 2

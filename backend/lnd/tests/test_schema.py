@@ -94,6 +94,21 @@ def test_resolve_ln_get_transactions():
     assert excinfo.value.code == 2, "Should be exception #2, unauthenticated"
 
 
+def test_resolve_ln_list_payments():
+    """
+    test if user is authenticated ✓
+    """
+
+    req = RequestFactory().get("/")
+    req.user = AnonymousUser()
+    resolve_info = mock_resolve_info(req)
+
+    query = schema.Query()
+    with pytest.raises(ClientVisibleException) as excinfo:
+        res = query.resolve_ln_list_payments(resolve_info)
+    assert excinfo.value.code == 2, "Should be exception #2, unauthenticated"
+
+
 def test_send_payment_mutation():
     """
     test if user is authenticated ✓

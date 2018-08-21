@@ -173,6 +173,42 @@ class LnRouteHint(graphene.ObjectType):
     )
 
 
+class LnPayment(graphene.ObjectType):
+    """https://api.lightning.community/?shell#payment"""
+
+    def __init__(self, data: dict):
+        super().__init__()
+        for attr in self.__dict__.keys():  # type: str
+            if attr in data:
+                setattr(self, attr, data[attr])
+
+    payment_hash = graphene.String(description="The payment hash")
+    value = graphene.Int(
+        description="The value of the payment in satoshis", default_value=0)
+    creation_date = graphene.Int(
+        description="The date of this payment", default_value=0)
+    path = graphene.List(
+        graphene.String,
+        description="The path this payment took",
+        default_value=[])
+    fee = graphene.Int(
+        description="The fee paid for this payment in satoshis",
+        default_value=0)
+    payment_preimage = graphene.String(description="The payment preimage")
+
+
+class LnListPaymentsResponse(graphene.ObjectType):
+    """https://api.lightning.community/?python#listpaymentsresponse"""
+
+    def __init__(self, data: dict):
+        super().__init__()
+        self.payments = []
+        for payment in data["payments"]:
+            self.payments.append(LnPayment(payment))
+
+    payments = graphene.List(LnPayment, description="The list of payments")
+
+
 class LnPayReqType(graphene.ObjectType):
     """https://api.lightning.community/?python#payreq"""
 
