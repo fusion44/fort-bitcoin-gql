@@ -203,8 +203,9 @@ class LnListPaymentsResponse(graphene.ObjectType):
     def __init__(self, data: dict):
         super().__init__()
         self.payments = []
-        for payment in data["payments"]:
-            self.payments.append(LnPayment(payment))
+        if "payments" in data:
+            for payment in data["payments"]:
+                self.payments.append(LnPayment(payment))
 
     payments = graphene.List(LnPayment, description="The list of payments")
 
@@ -261,8 +262,9 @@ class LnTransactionDetails(graphene.ObjectType):
     def __init__(self, data: dict):
         super().__init__()
         self.transactions = []
-        for ta in data["transactions"]:
-            self.transactions.append(LnTransaction(ta))
+        if "transactions" in data:
+            for ta in data["transactions"]:
+                self.transactions.append(LnTransaction(ta))
 
     transactions = graphene.List(
         LnTransaction,
