@@ -271,6 +271,97 @@ class LnTransactionDetails(graphene.ObjectType):
         description="The list of transactions relevant to the wallet.")
 
 
+class LnInvoice(graphene.ObjectType):
+    class Meta:
+        description = ""
+
+    def __init__(self, data: dict):
+        super().__init__()
+        for attr in self.__dict__.keys():  # type: str
+            if attr in data:
+                if attr == 'route_hints':
+                    hints = []
+                    for hint in data[attr]:
+                        hints.append(LnHopHint(hint))
+                    setattr(self, attr, hints)
+                else:
+                    setattr(self, attr, data[attr])
+
+    memo = graphene.String(
+        description=
+        "An optional memo to attach along with the invoice. Used for record keeping purposes for the invoice’s creator, and will also be set in the description field of the encoded payment request if the description_hash field is not being used."
+    )
+    receipt = graphene.String(
+        description="An optional cryptographic receipt of payment")
+    r_preimage = graphene.String(
+        description=
+        "The hex-encoded preimage (32 byte) which will allow settling an incoming HTLC payable to this preimage"
+    )
+    r_hash = graphene.String(description="The hash of the preimage")
+    value = graphene.Int(description="The value of this invoice in satoshis")
+    settled = graphene.Boolean(
+        description="Whether this invoice has been fulfilled")
+    creation_date = graphene.Int(description="When this invoice was created")
+    settle_date = graphene.Int(description="When this invoice was settled")
+    payment_request = graphene.String(
+        description=
+        "A bare-bones invoice for a payment within the Lightning Network. With the details of the invoice, the sender has all the data necessary to send a payment to the recipient."
+    )
+    description_hash = graphene.String(
+        description=
+        "Hash (SHA-256) of a description of the payment. Used if the description of payment (memo) is too long to naturally fit within the description field of an encoded payment request."
+    )
+    expiry = graphene.Int(
+        description=
+        "Payment request expiry time in seconds. Default is 3600 (1 hour).")
+    fallback_addr = graphene.String(description="Fallback on-chain address.")
+    cltv_expiry = graphene.Int(
+        description=
+        "Delta to use for the time-lock of the CLTV extended to the final hop."
+    )
+    route_hints = graphene.List(
+        LnHopHint,
+        description=
+        "Route hints that can each be individually used to assist in reaching the invoice’s destination."
+    )
+    private = graphene.Boolean(
+        description=
+        "Whether this invoice should include routing hints for private channels."
+    )
+    add_index = graphene.Int(
+        description=
+        "The “add” index of this invoice. Each newly created invoice will increment this index making it monotonically increasing. Callers to the SubscribeInvoices call can use this to instantly get notified of all added invoices with an add_index greater than this one."
+    )
+    settle_index = graphene.Int(
+        description=
+        "The “settle” index of this invoice. Each newly settled invoice will increment this index making it monotonically increasing. Callers to the SubscribeInvoices call can use this to instantly get notified of all settled invoices with an settle_index greater than this one."
+    )
+    amt_paid = graphene.Int(
+        description=
+        "The amount that was accepted for this invoice. This will ONLY be set if this invoice has been settled. We provide this field as if the invoice was created with a zero value, then we need to record what amount was ultimately accepted. Additionally, it’s possible that the sender paid MORE that was specified in the original invoice. So we’ll record that here as well."
+    )
+
+
+class LnAddInvoiceResponse(graphene.ObjectType):
+    """https://api.lightning.community/?python#addinvoiceresponse"""
+
+    def __init__(self, data: dict):
+        super().__init__()
+        for attr in self.__dict__.keys():  # type: str
+            if attr in data:
+                setattr(self, attr, data[attr])
+
+    r_hash = graphene.String()
+    payment_request = graphene.String(
+        description=
+        "A bare-bones invoice for a payment within the Lightning Network. With the details of the invoice, the sender has all the data necessary to send a payment to the recipient."
+    )
+    add_index = graphene.Int(
+        description=
+        "The “add” index of this invoice. Each newly created invoice will increment this index making it monotonically increasing. Callers to the SubscribeInvoices call can use this to instantly get notified of all added invoices with an add_index greater than this one.",
+        default_value=0)
+
+
 class LnRawPaymentInput(graphene.InputObjectType):
     class Meta:
         description = "Describes a send payment request using components that make up a payment"

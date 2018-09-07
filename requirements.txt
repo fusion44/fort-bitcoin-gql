@@ -1,3 +1,4 @@
+aiogrpc==1.5
 coverage==4.5.1
 Django==2.1.0
 django-cors-headers==2.4.0

@@ -234,6 +234,62 @@ def test_ln_transaction_details():
     assert len(inst.transactions) == 2
 
 
+def test_ln_invoice():
+    hop_hints = [{
+        "node_id": fake.pystr(),
+        "chan_id": fake.pyint(),
+        "fee_base_msat": fake.pyint(),
+        "fee_proportional_millionths": fake.pyint(),
+        "cltv_expiry_delta": fake.pyint()
+    }, {
+        "node_id": fake.pystr(),
+        "chan_id": fake.pyint(),
+        "fee_base_msat": fake.pyint(),
+        "fee_proportional_millionths": fake.pyint(),
+        "cltv_expiry_delta": fake.pyint()
+    }]
+    invoice = {
+        "memo": fake.pystr(),
+        "receipt": fake.sha256(),
+        "r_preimage": fake.sha256(),
+        "r_hash": fake.sha256(),
+        "value": fake.pyint(),
+        "settled": fake.pybool(),
+        "creation_date": fake.unix_time(),
+        "settle_date": fake.unix_time(),
+        "payment_request": fake.pystr(),
+        "description_hash": fake.pystr(),
+        "expiry": fake.unix_time(),
+        "fallback_addr": fake.pystr(),
+        "cltv_expiry": fake.unix_time(),
+        "route_hints": hop_hints,
+        "private": fake.pybool(),
+        "add_index": fake.pyint(),
+        "settle_index": fake.pyint(),
+        "amt_paid": fake.pyint(),
+    }
+    inst = types.LnInvoice(invoice)
+    assert inst
+    assert inst.memo == invoice["memo"]
+    assert inst.receipt == invoice["receipt"]
+    assert inst.r_preimage == invoice["r_preimage"]
+    assert inst.r_hash == invoice["r_hash"]
+    assert inst.value == invoice["value"]
+    assert inst.settled == invoice["settled"]
+    assert inst.creation_date == invoice["creation_date"]
+    assert inst.settle_date == invoice["settle_date"]
+    assert inst.payment_request == invoice["payment_request"]
+    assert inst.description_hash == invoice["description_hash"]
+    assert inst.expiry == invoice["expiry"]
+    assert inst.fallback_addr == invoice["fallback_addr"]
+    assert inst.cltv_expiry == invoice["cltv_expiry"]
+    assert len(inst.route_hints) == 2
+    assert inst.private == invoice["private"]
+    assert inst.add_index == invoice["add_index"]
+    assert inst.settle_index == invoice["settle_index"]
+    assert inst.amt_paid == invoice["amt_paid"]
+
+
 def test_ln_payment():
     payment = {
         "payment_hash": fake.sha256(),

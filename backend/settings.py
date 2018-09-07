@@ -85,15 +85,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "channels",
     'rest_framework',
     'corsheaders',
     'backend.btc',
     'backend.stats',
     'backend.user_profile',
+    "graphql_ws.django",
     'graphene_django',
 ]
 
-GRAPHENE = {'SCHEMA': 'backend.schema.schema'}
+GRAPHENE = {"MIDDLEWARE": [], 'SCHEMA': 'backend.schema.schema'}
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES':
@@ -127,6 +129,20 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'backend.urls'
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+ASGI_APPLICATION = "graphql_ws.django.routing.session_application"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache"
+    }
+}
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 TEMPLATES = [
     {

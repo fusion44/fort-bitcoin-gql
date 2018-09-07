@@ -2,7 +2,11 @@
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/."""
 
+import uuid
 import json
+from rx import Observable
+from asgiref.sync import async_to_sync
+from django.core.cache import cache
 
 import graphene
 from google.protobuf.json_format import MessageToJson
@@ -172,6 +176,43 @@ def request_generator(testnet=True,
             # Do things between iterations here.
 
 
+class AddInvoice(graphene.Mutation):
+    class Arguments:
+        testnet = graphene.Boolean()
+        memo = graphene.String(
+            description=
+            "An optional memo to attach along with the invoice. Used for record keeping purposes for the invoice’s creator, and will also be set in the description field of the encoded payment request if the description_hash field is not being used."
+        )
+        value = graphene.Int(
+            description="The value of this invoice in satoshis", required=True)
+
+    description = "AddInvoice attempts to add a new invoice to the invoice database. Any duplicated invoices are rejected, therefore all invoices must have a unique payment preimage."
+
+    response = graphene.Field(types.LnAddInvoiceResponse)
+
+    @classmethod
+    def mutate(cls, root, info, value, testnet: bool = True, memo: str = ""):
+        if not info.context.user.is_authenticated:
+            raise exceptions.unauthenticated()
+
+        channel_data = build_grpc_channel(testnet)
+        stub = lnrpc.LightningStub(channel_data.channel)
+        request = ln.Invoice(
+            value=value,
+            memo=memo,
+            add_index=1,
+        )
+
+        try:
+            response = stub.AddInvoice(
+                request, metadata=[('macaroon', channel_data.macaroon)])
+        except RpcError as e:
+            raise exceptions.custom(str(e))
+
+        json_data = json.loads(MessageToJson(response))
+        return AddInvoice(response=types.LnAddInvoiceResponse(json_data))
+
+
 class SendPayment(graphene.Mutation):
     class Arguments:
         testnet = graphene.Boolean()
@@ -231,8 +272,37 @@ class SendPayment(graphene.Mutation):
                 payment_route=types.LnRoute(json_data["payment_route"]))
 
 
+class InvoiceSubscription(graphene.ObjectType):
+    invoice_subscription = graphene.Field(
+        types.LnInvoice,
+        description=
+        "SubscribeInvoices returns a uni-directional stream (server -> client) for notifying the client of newly added/settled invoices. The caller can optionally specify the add_index and/or the settle_index. If the add_index is specified, then we’ll first start by sending add invoice events for all invoices with an add_index greater than the specified value. If the settle_index is specified, the next, we’ll send out all settle events for invoices with a settle_index greater than the specified value. One or both of these fields can be set. If no fields are set, then we’ll only send out the latest add/settle events.",
+        testnet=graphene.Boolean(),
+        add_index=graphene.Int(),
+        settle_index=graphene.Int())
+
+    async def resolve_invoice_subscription(self,
+                                           info,
+                                           testnet=True,
+                                           add_index=None,
+                                           settle_index=None):
+        channel_data = build_grpc_channel(testnet, True)
+        stub = lnrpc.LightningStub(channel_data.channel)
+        request = ln.InvoiceSubscription(
+            add_index=add_index,
+            settle_index=settle_index,
+        )
+
+        async for response in stub.SubscribeInvoices(
+                request, metadata=[('macaroon', channel_data.macaroon)]):
+            json_data = json.loads(MessageToJson(response))
+            invoice = types.LnInvoice(json_data)
+            yield invoice
+
+
 class LnMutations(graphene.ObjectType):
     class Meta:
         description = "Contains all mutations related to Lightning Network"
 
     ln_send_payment = SendPayment.Field()
+    ln_add_invoice = AddInvoice.Field()

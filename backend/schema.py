@@ -18,4 +18,7 @@ class Query(backend.btc.schema_node.Query, backend.lnd.schema.Query,
     pass
 
 
-schema = graphene.Schema(query=Query, mutation=backend.lnd.schema.LnMutations)
+schema = graphene.Schema(
+    query=Query,
+    mutation=backend.lnd.schema.LnMutations,
+    subscription=backend.lnd.schema.InvoiceSubscription)
