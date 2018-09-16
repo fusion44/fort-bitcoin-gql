@@ -1,25 +1,21 @@
-"""This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at http://mozilla.org/MPL/2.0/."""
-
-import uuid
+"""A GraphQL API for the LND software
+For a full description of all available API"s see https://api.lightning.community
+"""
 import json
-from rx import Observable
-from asgiref.sync import async_to_sync
-from django.core.cache import cache
 
 import graphene
+from django.db.models import QuerySet
 from google.protobuf.json_format import MessageToJson
+from grpc import RpcError
 
 import backend.lnd.rpc_pb2 as ln
 import backend.lnd.rpc_pb2_grpc as lnrpc
-import backend.lnd.types as types
-import backend.exceptions as exceptions
-from backend.lnd.utils import ChannelData, build_grpc_channel
-from grpc import RpcError
-"""A simple GraphQL API for the c-lightning software
-For a full description of all available API"s see https://github.com/ElementsProject/lightning
-"""
+from backend import exceptions
+from backend.lnd import models, types
+from backend.lnd.implementations import (CreateLightningWalletMutation,
+                                         InitWalletMutation, gen_seed_query,
+                                         get_info_query)
+from backend.lnd.utils import build_grpc_channel
 
 
 class Query(graphene.ObjectType):
@@ -29,20 +25,19 @@ class Query(graphene.ObjectType):
         types.LnInfoType,
         description=
         "GetInfo returns general information concerning the lightning node including it’s identity pubkey, alias, the chains it is connected to, and information concerning the number of open+pending channels.",
-        testnet=graphene.Boolean())
+    )
 
     def resolve_ln_get_info(self, info, **kwargs):
         if not info.context.user.is_authenticated:
             raise exceptions.unauthenticated()
 
-        testnet = kwargs.get("testnet")
-        channel_data = build_grpc_channel(testnet)
-        stub = lnrpc.LightningStub(channel_data.channel)
-        request = ln.GetInfoRequest()
-        response = stub.GetInfo(
-            request, metadata=[('macaroon', channel_data.macaroon)])
-        json_data = json.loads(MessageToJson(response))
-        return types.LnInfoType(json_data)
+        res: QuerySet = models.LNDWallet.objects.filter(
+            owner=info.context.user)
+
+        if not res:
+            raise exceptions.no_wallet_instance_found()
+
+        return get_info_query(res.first())
 
     ln_get_channel_balance = graphene.Field(
         types.LnChannelBalance,
@@ -126,6 +121,41 @@ class Query(graphene.ObjectType):
             request, metadata=[('macaroon', channel_data.macaroon)])
         json_data = json.loads(MessageToJson(response))
         return types.LnPayReqType(json_data)
+
+    ln_gen_seed = graphene.Field(
+        types.LnGenSeedResponse,
+        description=
+        "GenSeed is the first method that should be used to instantiate a new lnd instance. This method allows a caller to generate a new aezeed cipher seed given an optional passphrase. If provided, the passphrase will be necessary to decrypt the cipherseed to expose the internal wallet seed. Once the cipherseed is obtained and verified by the user, the InitWallet method should be used to commit the newly generated seed, and create the wallet.",
+        aezeed_passphrase=graphene.String(
+            description=
+            "An optional user provided passphrase that will be used to encrypt the generated aezeed cipher seed."
+        ),
+        seed_entropy=graphene.String(
+            description=
+            "An optional 16-bytes generated via CSPRNG. If not specified, then a fresh set of randomness will be used to create the seed."
+        ))
+
+    def resolve_ln_gen_seed(self,
+                            info,
+                            aezeed_passphrase=None,
+                            seed_entropy=None):
+        """https://api.lightning.community/?python#genseed"""
+
+        if not info.context.user.is_authenticated:
+            raise exceptions.unauthenticated()
+
+        res: QuerySet = models.LNDWallet.objects.filter(
+            owner=info.context.user)
+
+        if not res:
+            raise exceptions.no_wallet_instance_found()
+
+        # we currently only allow one wallet per user anyway,
+        # so just get the first one
+        return gen_seed_query(
+            res.first(),
+            aezeed_passphrase=aezeed_passphrase,
+            seed_entropy=seed_entropy)
 
     ln_list_payments = graphene.Field(
         types.LnListPaymentsResponse,
@@ -304,5 +334,11 @@ class LnMutations(graphene.ObjectType):
     class Meta:
         description = "Contains all mutations related to Lightning Network"
 
+    create_lightning_wallet = CreateLightningWalletMutation.Field(
+        description="Creates a new wallet for the logged in user")
     ln_send_payment = SendPayment.Field()
     ln_add_invoice = AddInvoice.Field()
+    ln_init_wallet = InitWalletMutation.Field(
+        description=
+        "Used when lnd is starting up for the first time to fully initialize the daemon and its internal wallet. At the very least a wallet password must be provided. This will be used to encrypt sensitive material on disk. In the case of a recovery scenario, the user can also specify their aezeed mnemonic and passphrase. If set, then the daemon will use this prior state to initialize its internal wallet. Alternatively, this can be used along with the GenSeed RPC to obtain a seed, then present it to the user. Once it has been verified by the user, the seed can be fed into this RPC in order to commit the new wallet."
+    )

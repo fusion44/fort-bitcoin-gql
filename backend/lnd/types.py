@@ -4,6 +4,31 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
 
 import graphene
+from graphene_django.types import DjangoObjectType
+from backend.lnd import models
+
+
+class ResponseStatus(graphene.ObjectType):
+    def __init__(self, code: int, form_error: str = "", suggestions: str = ""):
+        super().__init__()
+        self.code = code
+        self.form_error = form_error
+        self.suggestions = suggestions
+
+    code = graphene.Int(
+        description=
+        "200 if successful or an appropriate HTTP statuscode is returned upon error"
+    )
+    form_error = graphene.String(
+        description="Additional information about the error")
+    suggestions = graphene.String(
+        description=
+        "If available, a suggestion how to fix this problem will be included")
+
+
+class WalletType(DjangoObjectType):
+    class Meta:
+        model = models.LNDWallet
 
 
 class LnInfoType(graphene.ObjectType):
@@ -195,6 +220,26 @@ class LnPayment(graphene.ObjectType):
         description="The fee paid for this payment in satoshis",
         default_value=0)
     payment_preimage = graphene.String(description="The payment preimage")
+
+
+class LnGenSeedResponse(graphene.ObjectType):
+    """https://api.lightning.community/?python#genseed"""
+
+    def __init__(self, data: dict):
+        super().__init__()
+        for attr in self.__dict__.keys():  # type: str
+            if attr in data:
+                setattr(self, attr, data[attr])
+
+    cipher_seed_mnemonic = graphene.List(
+        graphene.String,
+        description=
+        "A 24-word mnemonic that encodes a prior aezeed cipher seed obtained by the user. This field is optional, as if not provided, then the daemon will generate a new cipher seed for the user. Otherwise, then the daemon will attempt to recover the wallet state linked to this cipher seed."
+    )
+    enciphered_seed = graphene.String(
+        description=
+        "The raw aezeed cipher seed bytes. This is the raw cipher text before run through our mnemonic encoding scheme."
+    )
 
 
 class LnListPaymentsResponse(graphene.ObjectType):

@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'backend.btc',
+    'backend.lnd',
     'backend.stats',
     'backend.user_profile',
     "graphql_ws.django",
