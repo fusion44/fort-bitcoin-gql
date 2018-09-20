@@ -8,9 +8,11 @@ djangorestframework-jwt==1.11.0
 graphene-django==2.2.0
 grpcio-tools==1.14.2
 googleapis-common-protos==1.5.3
-mixer==6.0.1
 pylint-django==2.0.2
 pytest-cov==2.6.0
 pytest-django==3.4.2
 python-bitcoinrpc==1.0
 yapf==0.24.0
+
+# mixer  --> Does not support Django 2.1
+git+git://github.com/Mikhail517/mixer.git@develop#egg=mixer

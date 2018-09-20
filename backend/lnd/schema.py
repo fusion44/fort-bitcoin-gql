@@ -13,13 +13,13 @@ import backend.lnd.rpc_pb2_grpc as lnrpc
 from backend import exceptions
 from backend.lnd import models, types
 from backend.lnd.implementations import (CreateLightningWalletMutation,
-                                         InitWalletMutation, gen_seed_query,
+                                         InitWalletMutation, GenSeedQuery,
                                          get_info_query)
 from backend.lnd.utils import build_grpc_channel
 
 
 class Query(graphene.ObjectType):
-    """Contains all Lightning RPC queries"""
+    """Contains some Lightning RPC queries"""
 
     ln_get_info = graphene.Field(
         types.LnInfoType,
@@ -121,41 +121,6 @@ class Query(graphene.ObjectType):
             request, metadata=[('macaroon', channel_data.macaroon)])
         json_data = json.loads(MessageToJson(response))
         return types.LnPayReqType(json_data)
-
-    ln_gen_seed = graphene.Field(
-        types.LnGenSeedResponse,
-        description=
-        "GenSeed is the first method that should be used to instantiate a new lnd instance. This method allows a caller to generate a new aezeed cipher seed given an optional passphrase. If provided, the passphrase will be necessary to decrypt the cipherseed to expose the internal wallet seed. Once the cipherseed is obtained and verified by the user, the InitWallet method should be used to commit the newly generated seed, and create the wallet.",
-        aezeed_passphrase=graphene.String(
-            description=
-            "An optional user provided passphrase that will be used to encrypt the generated aezeed cipher seed."
-        ),
-        seed_entropy=graphene.String(
-            description=
-            "An optional 16-bytes generated via CSPRNG. If not specified, then a fresh set of randomness will be used to create the seed."
-        ))
-
-    def resolve_ln_gen_seed(self,
-                            info,
-                            aezeed_passphrase=None,
-                            seed_entropy=None):
-        """https://api.lightning.community/?python#genseed"""
-
-        if not info.context.user.is_authenticated:
-            raise exceptions.unauthenticated()
-
-        res: QuerySet = models.LNDWallet.objects.filter(
-            owner=info.context.user)
-
-        if not res:
-            raise exceptions.no_wallet_instance_found()
-
-        # we currently only allow one wallet per user anyway,
-        # so just get the first one
-        return gen_seed_query(
-            res.first(),
-            aezeed_passphrase=aezeed_passphrase,
-            seed_entropy=seed_entropy)
 
     ln_list_payments = graphene.Field(
         types.LnListPaymentsResponse,
@@ -328,6 +293,10 @@ class InvoiceSubscription(graphene.ObjectType):
             json_data = json.loads(MessageToJson(response))
             invoice = types.LnInvoice(json_data)
             yield invoice
+
+
+class Queries(GenSeedQuery):
+    pass
 
 
 class LnMutations(graphene.ObjectType):

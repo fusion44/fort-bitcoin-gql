@@ -33,12 +33,8 @@ def unknown() -> ClientVisibleException:
     return ClientVisibleException(1, "An unknown error occurred")
 
 
-def internal_server_error() -> ClientVisibleException:
-    return ClientVisibleException(2, "Internal server error")
-
-
 def unauthenticated() -> ClientVisibleException:
-    return ClientVisibleException(3, "Unauthenticated")
+    return ClientVisibleException(2, "Unauthenticated")
 
 
 def no_wallet_instance_found():

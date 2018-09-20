@@ -12,7 +12,8 @@ import backend.stats.schema
 
 
 class Query(backend.btc.schema_node.Query, backend.lnd.schema.Query,
-            backend.stats.schema.Query, graphene.ObjectType):
+            backend.lnd.schema.Queries, backend.stats.schema.Query,
+            graphene.ObjectType):
     # This class will inherit from multiple Queries
     # as we begin to add more apps to our project
     pass
