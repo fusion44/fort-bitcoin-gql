@@ -1,4 +1,5 @@
 """Implementation for the init wallet mutation"""
+import time
 
 import graphene
 import grpc
@@ -78,7 +79,7 @@ class StopDaemonMutation(graphene.Mutation):
         if channel_data.error is not None:
             return channel_data.error
 
-        # stop deamon
+        # stop daemon
         stub = lnrpc.LightningStub(channel_data.channel)
         request = ln.StopRequest()
         try:
@@ -88,4 +89,14 @@ class StopDaemonMutation(graphene.Mutation):
             print(exc)
             return ServerError.generic_rpc_error(exc.code, exc.details)  # pylint: disable=E1101
 
-        return response
+        start = time.time()
+        while True:
+            if not lnd_instance_is_running(cfg):
+                return StopDaemonSuccess()
+
+            if time.time() - start >= 10:
+                return StopDaemonError(
+                    error_message=
+                    "Unable to shutdown the process within 10 seconds")
+
+            time.sleep(1)
