@@ -12,10 +12,13 @@ import aiogrpc
 import grpc
 import psutil
 
+from backend.error_responses import ServerError
+
 CONFIG = configparser.ConfigParser()
 CONFIG.read("config.ini")
 
-ChannelData = collections.namedtuple('ChannelData', ['channel', 'macaroon'])
+ChannelData = collections.namedtuple('ChannelData',
+                                     ['channel', 'macaroon', 'error'])
 
 LNDWalletConfig = collections.namedtuple('LNDWalletConfig', [
     "data_dir",
@@ -38,26 +41,45 @@ def build_grpc_channel_manual(rpc_server,
                               cert_path,
                               macaroon_path=None,
                               is_async=False) -> ChannelData:
-    macaroon = ""
-    if macaroon_path is not None:
-        with open(macaroon_path, 'rb') as f:
-            macaroon_bytes = f.read()
-            macaroon = codecs.encode(macaroon_bytes, 'hex')
+    """Opens a grpc channel and returns the data as part of the ChannelData
+    object. If an error occurs, ChannelData.error will not be None."""
 
-    rpc_url = "{}:{}".format(rpc_server, rpc_port)
+    try:
+        macaroon = ""
+        if macaroon_path is not None:
+            with open(macaroon_path, 'rb') as f:
+                macaroon_bytes = f.read()
+                macaroon = codecs.encode(macaroon_bytes, 'hex')
 
-    cert = open(cert_path, "rb").read()
+        rpc_url = "{}:{}".format(rpc_server, rpc_port)
 
-    if is_async:
-        creds = aiogrpc.ssl_channel_credentials(cert)
-        channel = aiogrpc.secure_channel(rpc_url, creds)
-    else:
-        creds = grpc.ssl_channel_credentials(cert)
-        channel = grpc.secure_channel(rpc_url, creds)
+        cert = open(cert_path, "rb").read()
+    except FileNotFoundError as file_error:
+        print(file_error)
+        return ChannelData(
+            channel=None,
+            macaroon=None,
+            error=ServerError(error_message=str(file_error)))
 
-    grpc.channel_ready_future(channel).result(timeout=2)
+    try:
+        if is_async:
+            creds = aiogrpc.ssl_channel_credentials(cert)
+            channel = aiogrpc.secure_channel(rpc_url, creds)
+        else:
+            creds = grpc.ssl_channel_credentials(cert)
+            channel = grpc.secure_channel(rpc_url, creds)
 
-    return ChannelData(channel=channel, macaroon=macaroon)
+        grpc.channel_ready_future(channel).result(timeout=2)
+    except grpc.RpcError as exc:
+        print(exc)
+        return ChannelData(
+            error=ServerError.generic_rpc_error(exc.code, exc.details))  # pylint: disable=E1101
+    except grpc.FutureTimeoutError as exc:
+        print(exc)
+        return ChannelData(
+            error=ServerError(error_message="gRPC connection timeout"))  # pylint: disable=E1101
+
+    return ChannelData(channel=channel, macaroon=macaroon, error=None)
 
 
 def build_grpc_channel(testnet=False, is_async=False,

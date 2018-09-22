@@ -132,21 +132,15 @@ def start_daemon_mutation(wallet: LNDWallet,
         return ServerError.generic_rpc_error(exc.code, exc.details)  # pylint: disable=E1101
 
     # build the channel to the newly started daemon
-    try:
-        channel_data = build_grpc_channel_manual(
-            rpc_server="127.0.0.1",
-            rpc_port=cfg.rpc_listen_port_ipv4,
-            cert_path=cfg.tls_cert_path,
-            macaroon_path=cfg.admin_macaroon_path)
-    except FileNotFoundError as file_error:
-        print(file_error)
-        return ServerError(error_message=str(file_error))
-    except grpc.RpcError as exc:
-        print(exc)
-        return ServerError.generic_rpc_error(exc.code, exc.details)  # pylint: disable=E1101
-    except grpc.FutureTimeoutError as exc:
-        print(exc)
-        return ServerError(error_message="gRPC connection timeout")  # pylint: disable=E1101
+
+    channel_data = build_grpc_channel_manual(
+        rpc_server="127.0.0.1",
+        rpc_port=cfg.rpc_listen_port_ipv4,
+        cert_path=cfg.tls_cert_path,
+        macaroon_path=cfg.admin_macaroon_path)
+
+    if channel_data.error is not None:
+        return channel_data.error
 
     # unlock the wallet
     stub = lnrpc.WalletUnlockerStub(channel_data.channel)
@@ -159,22 +153,14 @@ def start_daemon_mutation(wallet: LNDWallet,
     # it's fully operational
     time.sleep(5)
 
-    #
-    try:
-        channel_data = build_grpc_channel_manual(
-            rpc_server="127.0.0.1",
-            rpc_port=cfg.rpc_listen_port_ipv4,
-            cert_path=cfg.tls_cert_path,
-            macaroon_path=cfg.admin_macaroon_path)
-    except FileNotFoundError as file_error:
-        print(file_error)
-        return ServerError(error_message=str(file_error))
-    except grpc.RpcError as exc:
-        print(exc)
-        return ServerError.generic_rpc_error(exc.code, exc.details)  # pylint: disable=E1101
-    except grpc.FutureTimeoutError as exc:
-        print(exc)
-        return ServerError(error_message="gRPC connection timeout")  # pylint: disable=E1101
+    channel_data = build_grpc_channel_manual(
+        rpc_server="127.0.0.1",
+        rpc_port=cfg.rpc_listen_port_ipv4,
+        cert_path=cfg.tls_cert_path,
+        macaroon_path=cfg.admin_macaroon_path)
+
+    if channel_data.error is not None:
+        return channel_data.error
 
     # get the latest info
     stub = lnrpc.LightningStub(channel_data.channel)
