@@ -13,31 +13,13 @@ import backend.lnd.rpc_pb2_grpc as lnrpc
 from backend import exceptions
 from backend.lnd import models, types
 from backend.lnd.implementations import (
-    CreateLightningWalletMutation, GenSeedQuery, InitWalletMutation,
-    StartDaemonMutation, StopDaemonMutation, get_info_query)
+    CreateLightningWalletMutation, GenSeedQuery, GetInfoQuery,
+    InitWalletMutation, StartDaemonMutation, StopDaemonMutation)
 from backend.lnd.utils import build_grpc_channel
 
 
 class Query(graphene.ObjectType):
     """Contains some Lightning RPC queries"""
-
-    ln_get_info = graphene.Field(
-        types.LnInfoType,
-        description=
-        "GetInfo returns general information concerning the lightning node including it’s identity pubkey, alias, the chains it is connected to, and information concerning the number of open+pending channels.",
-    )
-
-    def resolve_ln_get_info(self, info, **kwargs):
-        if not info.context.user.is_authenticated:
-            raise exceptions.unauthenticated()
-
-        res: QuerySet = models.LNDWallet.objects.filter(
-            owner=info.context.user)
-
-        if not res:
-            raise exceptions.no_wallet_instance_found()
-
-        return get_info_query(res.first())
 
     ln_get_channel_balance = graphene.Field(
         types.LnChannelBalance,
@@ -295,7 +277,7 @@ class InvoiceSubscription(graphene.ObjectType):
             yield invoice
 
 
-class Queries(GenSeedQuery):
+class Queries(GenSeedQuery, GetInfoQuery):
     pass
 
 
