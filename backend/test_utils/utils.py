@@ -6,6 +6,8 @@ import grpc
 import pytest
 from graphql.execution.base import ResolveInfo
 
+from backend.lnd.utils import LNDWalletConfig
+
 pytestmark = pytest.mark.django_db
 
 
@@ -26,3 +28,19 @@ def fake_build_channel_gRPC_err(rpc_server, rpc_port, cert_path,
     err.code = 1337
     err.details = "Failed building the channel"
     raise err
+
+
+def fake_lnd_wallet_config():
+    return LNDWalletConfig(
+        data_dir="",
+        tls_cert_path="",
+        tls_key_path="",
+        admin_macaroon_path="",
+        read_only_macaroon_path="",
+        log_dir="",
+        listen_port_ipv4="",
+        listen_port_ipv6="",
+        rpc_listen_port_ipv4="",
+        rpc_listen_port_ipv6="",
+        rest_port_ipv4="",
+        rest_port_ipv6="")

@@ -147,10 +147,19 @@ def build_lnd_wallet_config(pk) -> LNDWalletConfig:
 
 def lnd_instance_is_running(cfg: LNDWalletConfig) -> bool:
     args = ['pgrep', '-f', "lnd.*--datadir={}*".format(cfg.data_dir)]
-    output = subprocess.check_output(args).decode().splitlines()
+    try:
+        output = subprocess.check_output(args).decode().splitlines()
+    except subprocess.CalledProcessError as exc:
+        if exc.returncode is 1:
+            return False
 
-    # there must only be one instance running with this data dir
-    if output:
-        return psutil.pid_exists(int(output[0]))
+        raise RuntimeError(
+            "Command '{}' return with error (code {}): {}".format(
+                exc.cmd, exc.returncode, exc.output))
 
-    return False
+    if len(output) > 1:
+        raise RuntimeError(
+            "Found more than one lnd instance with the given data dir. PID's {}"
+            .format(output))
+
+    return psutil.pid_exists(int(output[0]))
