@@ -2,18 +2,15 @@
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-
 import codecs
 import collections
 import configparser
 import os
+import subprocess
 
 import aiogrpc
-import graphene
 import grpc
-
-from backend import exceptions
-from backend.lnd import types
+import psutil
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read("config.ini")
@@ -124,3 +121,14 @@ def build_lnd_wallet_config(pk) -> LNDWalletConfig:
         rpc_listen_port_ipv4=default_rpc_port + pk * 2 - 1,
         rest_port_ipv6=default_rest_port + pk * 2,
         rest_port_ipv4=default_rest_port + pk * 2 - 1)
+
+
+def lnd_instance_is_running(cfg: LNDWalletConfig) -> bool:
+    args = ['pgrep', '-f', "lnd.*--datadir={}*".format(cfg.data_dir)]
+    output = subprocess.check_output(args).decode().splitlines()
+
+    # there must only be one instance running with this data dir
+    if output:
+        return psutil.pid_exists(int(output[0]))
+
+    return False

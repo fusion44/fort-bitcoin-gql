@@ -12,9 +12,9 @@ import backend.lnd.rpc_pb2 as ln
 import backend.lnd.rpc_pb2_grpc as lnrpc
 from backend import exceptions
 from backend.lnd import models, types
-from backend.lnd.implementations import (CreateLightningWalletMutation,
-                                         InitWalletMutation, GenSeedQuery,
-                                         get_info_query)
+from backend.lnd.implementations import (
+    CreateLightningWalletMutation, GenSeedQuery, InitWalletMutation,
+    StartDaemonMutation, StopDaemonMutation, get_info_query)
 from backend.lnd.utils import build_grpc_channel
 
 
@@ -310,4 +310,12 @@ class LnMutations(graphene.ObjectType):
     ln_init_wallet = InitWalletMutation.Field(
         description=
         "Used when lnd is starting up for the first time to fully initialize the daemon and its internal wallet. At the very least a wallet password must be provided. This will be used to encrypt sensitive material on disk. In the case of a recovery scenario, the user can also specify their aezeed mnemonic and passphrase. If set, then the daemon will use this prior state to initialize its internal wallet. Alternatively, this can be used along with the GenSeed RPC to obtain a seed, then present it to the user. Once it has been verified by the user, the seed can be fed into this RPC in order to commit the new wallet."
+    )
+    start_daemon = StartDaemonMutation.Field(
+        description=
+        "StartDaemon will start the daemon and initialize the wallet if the password is provided"
+    )
+    ln_stop_daemon = StopDaemonMutation.Field(
+        description=
+        "StopDaemon will send a shutdown request to the interrupt handler, triggering a graceful shutdown of the daemon."
     )
