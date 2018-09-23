@@ -25,21 +25,6 @@ def test_resolve_ln_decode_pay_req():
     assert excinfo.value.code == 2, "Should be exception #2, unauthenticated"
 
 
-def test_resolve_ln_get_channel_balance():
-    """
-    test if user is authenticated ✓
-    """
-
-    req = RequestFactory().get("/")
-    req.user = AnonymousUser()
-    resolveInfo = mock_resolve_info(req)
-
-    query = schema.Query()
-    with pytest.raises(ClientVisibleException) as excinfo:
-        res = query.resolve_ln_get_channel_balance(resolveInfo)
-    assert excinfo.value.code == 2, "Should be exception #2, unauthenticated"
-
-
 def test_resolve_ln_get_wallet_balance():
     """
     test if user is authenticated ✓

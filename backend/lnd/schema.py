@@ -11,35 +11,15 @@ from grpc import RpcError
 import backend.lnd.rpc_pb2 as ln
 import backend.lnd.rpc_pb2_grpc as lnrpc
 from backend import exceptions
-from backend.lnd import models, types
+from backend.lnd import types
 from backend.lnd.implementations import (
-    CreateLightningWalletMutation, GenSeedQuery, GetInfoQuery,
-    InitWalletMutation, StartDaemonMutation, StopDaemonMutation)
+    CreateLightningWalletMutation, GenSeedQuery, GetChannelBalanceQuery,
+    GetInfoQuery, InitWalletMutation, StartDaemonMutation, StopDaemonMutation)
 from backend.lnd.utils import build_grpc_channel
 
 
 class Query(graphene.ObjectType):
     """Contains some Lightning RPC queries"""
-
-    ln_get_channel_balance = graphene.Field(
-        types.LnChannelBalance,
-        description=
-        "ChannelBalance returns the total funds available across all open channels in satoshis.",
-        testnet=graphene.Boolean(),
-    )
-
-    def resolve_ln_get_channel_balance(self, info, **kwargs):
-        """https://api.lightning.community/#channelbalance"""
-        if not info.context.user.is_authenticated:
-            raise exceptions.unauthenticated()
-        testnet = kwargs.get("testnet")
-        channel_data = build_grpc_channel(testnet)
-        stub = lnrpc.LightningStub(channel_data.channel)
-        request = ln.ChannelBalanceRequest()
-        response = stub.ChannelBalance(
-            request, metadata=[('macaroon', channel_data.macaroon)])
-        json_data = json.loads(MessageToJson(response))
-        return types.LnChannelBalance(json_data)
 
     ln_get_wallet_balance = graphene.Field(
         types.LnWalletBalance,
@@ -277,7 +257,7 @@ class InvoiceSubscription(graphene.ObjectType):
             yield invoice
 
 
-class Queries(GenSeedQuery, GetInfoQuery):
+class Queries(GenSeedQuery, GetInfoQuery, GetChannelBalanceQuery):
     pass
 
 
