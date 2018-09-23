@@ -73,11 +73,15 @@ def build_grpc_channel_manual(rpc_server,
     except grpc.RpcError as exc:
         print(exc)
         return ChannelData(
+            channel=None,
+            macaroon=None,
             error=ServerError.generic_rpc_error(exc.code, exc.details))  # pylint: disable=E1101
     except grpc.FutureTimeoutError as exc:
         print(exc)
         return ChannelData(
-            error=ServerError(error_message="gRPC connection timeout"))  # pylint: disable=E1101
+            channel=None,
+            macaroon=None,
+            error=ServerError(error_message="gRPC connection timeout"))
 
     return ChannelData(channel=channel, macaroon=macaroon, error=None)
 
@@ -113,7 +117,7 @@ def build_grpc_channel(testnet=False, is_async=False,
     else:
         creds = grpc.ssl_channel_credentials(cert)
         channel = grpc.secure_channel(rpc_url, creds)
-    return ChannelData(channel=channel, macaroon=macaroon)
+    return ChannelData(channel=channel, macaroon=macaroon, error=None)
 
 
 def build_lnd_wallet_config(pk) -> LNDWalletConfig:
