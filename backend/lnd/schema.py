@@ -14,32 +14,9 @@ from backend.lnd import types
 from backend.lnd.implementations import (
     CreateLightningWalletMutation, DecodePayReqQuery, GenSeedQuery,
     GetChannelBalanceQuery, GetInfoQuery, GetTransactionsQuery,
-    GetWalletBalanceQuery, InitWalletMutation, StartDaemonMutation,
-    StopDaemonMutation)
+    GetWalletBalanceQuery, InitWalletMutation, ListPaymentsQuery,
+    StartDaemonMutation, StopDaemonMutation)
 from backend.lnd.utils import build_grpc_channel
-
-
-class Query(graphene.ObjectType):
-    """Contains some Lightning RPC queries"""
-
-    ln_list_payments = graphene.Field(
-        types.LnListPaymentsResponse,
-        description="ListPayments returns a list of all outgoing payments.",
-        testnet=graphene.Boolean())
-
-    def resolve_ln_list_payments(self, info, **kwargs):
-        """https://api.lightning.community/?python#listpayments"""
-        if not info.context.user.is_authenticated:
-            raise exceptions.unauthenticated()
-
-        testnet = kwargs.get("testnet")
-        channel_data = build_grpc_channel(testnet)
-        stub = lnrpc.LightningStub(channel_data.channel)
-        request = ln.ListPaymentsRequest()
-        response = stub.ListPayments(
-            request, metadata=[('macaroon', channel_data.macaroon)])
-        json_data = json.loads(MessageToJson(response))
-        return types.LnListPaymentsResponse(json_data)
 
 
 def request_generator(testnet=True,
@@ -202,6 +179,7 @@ class Queries(
         GetInfoQuery,
         GetTransactionsQuery,
         GetWalletBalanceQuery,
+        ListPaymentsQuery,
 ):
     pass
 
