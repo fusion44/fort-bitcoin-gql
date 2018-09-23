@@ -4,7 +4,6 @@ For a full description of all available API"s see https://api.lightning.communit
 import json
 
 import graphene
-from django.db.models import QuerySet
 from google.protobuf.json_format import MessageToJson
 from grpc import RpcError
 
@@ -14,32 +13,13 @@ from backend import exceptions
 from backend.lnd import types
 from backend.lnd.implementations import (
     CreateLightningWalletMutation, GenSeedQuery, GetChannelBalanceQuery,
-    GetInfoQuery, InitWalletMutation, StartDaemonMutation, StopDaemonMutation)
+    GetInfoQuery, GetWalletBalanceQuery, InitWalletMutation,
+    StartDaemonMutation, StopDaemonMutation)
 from backend.lnd.utils import build_grpc_channel
 
 
 class Query(graphene.ObjectType):
     """Contains some Lightning RPC queries"""
-
-    ln_get_wallet_balance = graphene.Field(
-        types.LnWalletBalance,
-        description=
-        "WalletBalance returns total unspent outputs(confirmed and unconfirmed), all confirmed unspent outputs and all unconfirmed unspent outputs under control of the wallet.",
-        testnet=graphene.Boolean(),
-    )
-
-    def resolve_ln_get_wallet_balance(self, info, **kwargs):
-        """https://api.lightning.community/#walletbalance"""
-        if not info.context.user.is_authenticated:
-            raise exceptions.unauthenticated()
-        testnet = kwargs.get("testnet")
-        channel_data = build_grpc_channel(testnet)
-        stub = lnrpc.LightningStub(channel_data.channel)
-        request = ln.WalletBalanceRequest()
-        response = stub.WalletBalance(
-            request, metadata=[('macaroon', channel_data.macaroon)])
-        json_data = json.loads(MessageToJson(response))
-        return types.LnWalletBalance(json_data)
 
     ln_get_transactions = graphene.Field(
         types.LnTransactionDetails,
@@ -257,7 +237,8 @@ class InvoiceSubscription(graphene.ObjectType):
             yield invoice
 
 
-class Queries(GenSeedQuery, GetInfoQuery, GetChannelBalanceQuery):
+class Queries(GenSeedQuery, GetInfoQuery, GetChannelBalanceQuery,
+              GetWalletBalanceQuery):
     pass
 
 

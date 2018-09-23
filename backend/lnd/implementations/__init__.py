@@ -6,5 +6,6 @@ from .mutations.start_daemon import StartDaemonMutation
 from .mutations.stop_daemon import StopDaemonMutation
 
 from .queries.gen_seed import GenSeedQuery
-from .queries.get_info import GetInfoQuery
 from .queries.get_channel_balance import GetChannelBalanceQuery
+from .queries.get_info import GetInfoQuery
+from .queries.get_wallet_balance import GetWalletBalanceQuery
