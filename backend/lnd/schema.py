@@ -12,36 +12,15 @@ import backend.lnd.rpc_pb2_grpc as lnrpc
 from backend import exceptions
 from backend.lnd import types
 from backend.lnd.implementations import (
-    CreateLightningWalletMutation, GenSeedQuery, GetChannelBalanceQuery,
-    GetInfoQuery, GetTransactionsQuery, GetWalletBalanceQuery,
-    InitWalletMutation, StartDaemonMutation, StopDaemonMutation)
+    CreateLightningWalletMutation, DecodePayReqQuery, GenSeedQuery,
+    GetChannelBalanceQuery, GetInfoQuery, GetTransactionsQuery,
+    GetWalletBalanceQuery, InitWalletMutation, StartDaemonMutation,
+    StopDaemonMutation)
 from backend.lnd.utils import build_grpc_channel
 
 
 class Query(graphene.ObjectType):
     """Contains some Lightning RPC queries"""
-
-    ln_decode_pay_req = graphene.Field(
-        types.LnPayReqType,
-        description=
-        "DecodePayReq takes an encoded payment request string and attempts to decode it, returning a full description of the conditions encoded within the payment request.",
-        testnet=graphene.Boolean(),
-        pay_req=graphene.String(
-            required=True,
-            description="The payment request string to be decoded"))
-
-    def resolve_ln_decode_pay_req(self, info, **kwargs):
-        if not info.context.user.is_authenticated:
-            raise exceptions.unauthenticated()
-        testnet = kwargs.get("testnet")
-        pay_req = kwargs.get("pay_req")
-        channel_data = build_grpc_channel(testnet)
-        stub = lnrpc.LightningStub(channel_data.channel)
-        request = ln.PayReqString(pay_req=pay_req)
-        response = stub.DecodePayReq(
-            request, metadata=[('macaroon', channel_data.macaroon)])
-        json_data = json.loads(MessageToJson(response))
-        return types.LnPayReqType(json_data)
 
     ln_list_payments = graphene.Field(
         types.LnListPaymentsResponse,
@@ -217,6 +196,7 @@ class InvoiceSubscription(graphene.ObjectType):
 
 
 class Queries(
+        DecodePayReqQuery,
         GenSeedQuery,
         GetChannelBalanceQuery,
         GetInfoQuery,

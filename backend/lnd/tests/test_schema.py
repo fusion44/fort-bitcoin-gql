@@ -10,21 +10,6 @@ from backend.test_utils.utils import mock_resolve_info
 pytestmark = pytest.mark.django_db
 
 
-def test_resolve_ln_decode_pay_req():
-    """
-    test if user is authenticated ✓
-    """
-
-    req = RequestFactory().get("/")
-    req.user = AnonymousUser()
-    resolveInfo = mock_resolve_info(req)
-
-    query = schema.Query()
-    with pytest.raises(ClientVisibleException) as excinfo:
-        res = query.resolve_ln_decode_pay_req(resolveInfo)
-    assert excinfo.value.code == 2, "Should be exception #2, unauthenticated"
-
-
 def test_resolve_ln_list_payments():
     """
     test if user is authenticated ✓
