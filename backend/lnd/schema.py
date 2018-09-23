@@ -5,84 +5,16 @@ import json
 
 import graphene
 from google.protobuf.json_format import MessageToJson
-from grpc import RpcError
 
 import backend.lnd.rpc_pb2 as ln
 import backend.lnd.rpc_pb2_grpc as lnrpc
-from backend import exceptions
 from backend.lnd import types
 from backend.lnd.implementations import (
-    CreateLightningWalletMutation, DecodePayReqQuery, GenSeedQuery,
-    GetChannelBalanceQuery, GetInfoQuery, GetTransactionsQuery,
+    AddInvoiceMutation, CreateLightningWalletMutation, DecodePayReqQuery,
+    GenSeedQuery, GetChannelBalanceQuery, GetInfoQuery, GetTransactionsQuery,
     GetWalletBalanceQuery, InitWalletMutation, ListPaymentsQuery,
     SendPaymentMutation, StartDaemonMutation, StopDaemonMutation)
 from backend.lnd.utils import build_grpc_channel
-
-
-def request_generator(testnet=True,
-                      dest="",
-                      dest_string="",
-                      amt=0,
-                      payment_hash="",
-                      payment_hash_string="",
-                      payment_request="",
-                      final_cltv_delta=0,
-                      fee_limit=None):
-    if payment_request != "":
-        while True:
-            print("trying...")
-            request = ln.SendRequest(
-                payment_request=str.encode(payment_request))
-            yield request
-    else:
-        while True:
-            request = ln.SendRequest(
-                dest=dest,
-                dest_string=dest_string,
-                amt=amt,
-                payment_hash=payment_hash,
-                payment_hash_string=payment_hash_string,
-                final_cltv_delta=final_cltv_delta,
-                fee_limit=fee_limit)
-            yield request
-            # Do things between iterations here.
-
-
-class AddInvoice(graphene.Mutation):
-    class Arguments:
-        testnet = graphene.Boolean()
-        memo = graphene.String(
-            description=
-            "An optional memo to attach along with the invoice. Used for record keeping purposes for the invoice’s creator, and will also be set in the description field of the encoded payment request if the description_hash field is not being used."
-        )
-        value = graphene.Int(
-            description="The value of this invoice in satoshis", required=True)
-
-    description = "AddInvoice attempts to add a new invoice to the invoice database. Any duplicated invoices are rejected, therefore all invoices must have a unique payment preimage."
-
-    response = graphene.Field(types.LnAddInvoiceResponse)
-
-    @classmethod
-    def mutate(cls, root, info, value, testnet: bool = True, memo: str = ""):
-        if not info.context.user.is_authenticated:
-            raise exceptions.unauthenticated()
-
-        channel_data = build_grpc_channel(testnet)
-        stub = lnrpc.LightningStub(channel_data.channel)
-        request = ln.Invoice(
-            value=value,
-            memo=memo,
-            add_index=1,
-        )
-
-        try:
-            response = stub.AddInvoice(
-                request, metadata=[('macaroon', channel_data.macaroon)])
-        except RpcError as e:
-            raise exceptions.custom(str(e))
-
-        json_data = json.loads(MessageToJson(response))
-        return AddInvoice(response=types.LnAddInvoiceResponse(json_data))
 
 
 class InvoiceSubscription(graphene.ObjectType):
@@ -132,7 +64,7 @@ class LnMutations(graphene.ObjectType):
     create_lightning_wallet = CreateLightningWalletMutation.Field(
         description="Creates a new wallet for the logged in user")
     ln_send_payment = SendPaymentMutation.Field()
-    ln_add_invoice = AddInvoice.Field()
+    ln_add_invoice = AddInvoiceMutation.Field()
     ln_init_wallet = InitWalletMutation.Field(
         description=
         "Used when lnd is starting up for the first time to fully initialize the daemon and its internal wallet. At the very least a wallet password must be provided. This will be used to encrypt sensitive material on disk. In the case of a recovery scenario, the user can also specify their aezeed mnemonic and passphrase. If set, then the daemon will use this prior state to initialize its internal wallet. Alternatively, this can be used along with the GenSeed RPC to obtain a seed, then present it to the user. Once it has been verified by the user, the seed can be fed into this RPC in order to commit the new wallet."
