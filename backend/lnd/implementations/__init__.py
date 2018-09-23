@@ -2,6 +2,7 @@
 
 from .mutations.create_wallet import CreateLightningWalletMutation
 from .mutations.init_wallet import InitWalletMutation
+from .mutations.send_payment import SendPaymentMutation
 from .mutations.start_daemon import StartDaemonMutation
 from .mutations.stop_daemon import StopDaemonMutation
 

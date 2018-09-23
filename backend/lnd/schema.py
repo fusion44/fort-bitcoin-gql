@@ -15,7 +15,7 @@ from backend.lnd.implementations import (
     CreateLightningWalletMutation, DecodePayReqQuery, GenSeedQuery,
     GetChannelBalanceQuery, GetInfoQuery, GetTransactionsQuery,
     GetWalletBalanceQuery, InitWalletMutation, ListPaymentsQuery,
-    StartDaemonMutation, StopDaemonMutation)
+    SendPaymentMutation, StartDaemonMutation, StopDaemonMutation)
 from backend.lnd.utils import build_grpc_channel
 
 
@@ -85,65 +85,6 @@ class AddInvoice(graphene.Mutation):
         return AddInvoice(response=types.LnAddInvoiceResponse(json_data))
 
 
-class SendPayment(graphene.Mutation):
-    class Arguments:
-        testnet = graphene.Boolean()
-        payment_raw = types.LnRawPaymentInput()
-        payment_request = graphene.String(
-            description=
-            "A bare-bones invoice for a payment within the Lightning Network. With the details of the invoice, the sender has all the data necessary to send a payment to the recipient."
-        )
-        final_cltv_delta = graphene.Int(
-            description=
-            "The CLTV delta from the current height that should be used to set the timelock for the final hop."
-        )
-        fee_limit = types.LnFeeLimit()
-
-    description = "SendPayment sends a payment through the Lightning Network"
-
-    payment_error = graphene.String(
-        description="Error message if payment fails")
-    payment_preimage = graphene.String(description="Preimage of the payment")
-    payment_route = graphene.Field(types.LnRoute)
-
-    @classmethod
-    def mutate(cls,
-               root,
-               info,
-               testnet: bool = True,
-               payment_raw: types.LnRawPaymentInput = None,
-               payment_request: str = "",
-               final_cltv_delta: int = 0,
-               fee_limit: types.LnFeeLimit = None):
-
-        if not info.context.user.is_authenticated:
-            raise exceptions.unauthenticated()
-
-        channel_data = build_grpc_channel(testnet)
-        stub = lnrpc.LightningStub(channel_data.channel)
-        request = ln.SendRequest(payment_request=payment_request)
-        try:
-            response = stub.SendPaymentSync(
-                request, metadata=[('macaroon', channel_data.macaroon)])
-        except RpcError as e:
-            return SendPayment(
-                payment_error=e.details(),  # pylint: disable=E1101
-                payment_preimage="",
-                payment_route=None)
-
-        json_data = json.loads(MessageToJson(response))
-        if response.payment_error is not "":
-            return SendPayment(
-                payment_error=response.payment_error,
-                payment_preimage="",
-                payment_route=None)
-        else:
-            return SendPayment(
-                payment_error=response.payment_error,
-                payment_preimage=response.payment_preimage,
-                payment_route=types.LnRoute(json_data["payment_route"]))
-
-
 class InvoiceSubscription(graphene.ObjectType):
     invoice_subscription = graphene.Field(
         types.LnInvoice,
@@ -190,7 +131,7 @@ class LnMutations(graphene.ObjectType):
 
     create_lightning_wallet = CreateLightningWalletMutation.Field(
         description="Creates a new wallet for the logged in user")
-    ln_send_payment = SendPayment.Field()
+    ln_send_payment = SendPaymentMutation.Field()
     ln_add_invoice = AddInvoice.Field()
     ln_init_wallet = InitWalletMutation.Field(
         description=
