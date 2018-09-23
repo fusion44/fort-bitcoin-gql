@@ -150,7 +150,7 @@ def build_lnd_wallet_config(pk) -> LNDWalletConfig:
 
 
 def lnd_instance_is_running(cfg: LNDWalletConfig) -> bool:
-    args = ['pgrep', '-f', "lnd.*--datadir={}*".format(cfg.data_dir)]
+    args = ['pgrep', '-f', "lnd.*--datadir={}".format(cfg.data_dir)]
     try:
         output = subprocess.check_output(args).decode().splitlines()
     except subprocess.CalledProcessError as exc:
