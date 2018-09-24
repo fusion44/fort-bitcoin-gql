@@ -12,7 +12,7 @@ from backend.error_responses import (ServerError, Unauthenticated,
 from backend.lnd.models import LNDWallet
 from backend.lnd.types import LnAddInvoiceResponse
 from backend.lnd.utils import (build_grpc_channel_manual,
-                               build_lnd_wallet_config)
+                               build_lnd_wallet_config, process_lnd_doc_string)
 
 
 class AddInvoiceSuccess(graphene.ObjectType):
@@ -40,9 +40,15 @@ class AddInvoiceMutation(graphene.Mutation):
             "An optional memo to attach along with the invoice. Used for record keeping purposes for the invoice’s creator, and will also be set in the description field of the encoded payment request if the description_hash field is not being used."
         )
 
-    description = "AddInvoice attempts to add a new invoice to the invoice database. Any duplicated invoices are rejected, therefore all invoices must have a unique payment preimage."
-
     result = AddInvoicePayload()
+
+    @staticmethod
+    def description():
+        """Returns the description for this mutation. 
+        The String is fetched directly from the lnd grpc package
+        """
+        return process_lnd_doc_string(
+            lnrpc.LightningServicer.AddInvoice.__doc__)
 
     def mutate(self, info, value, memo: str = ""):
         if not info.context.user.is_authenticated:

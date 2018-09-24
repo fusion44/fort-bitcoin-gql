@@ -12,7 +12,7 @@ from backend.lnd.models import LNDWallet
 from backend.lnd.types import LnInfoType
 from backend.lnd.utils import (LNDWalletConfig, build_grpc_channel_manual,
                                build_lnd_wallet_config,
-                               lnd_instance_is_running)
+                               lnd_instance_is_running, process_lnd_doc_string)
 
 
 class StopDaemonSuccess(graphene.ObjectType):
@@ -47,6 +47,14 @@ class StopDaemonPayload(graphene.Union):
 
 class StopDaemonMutation(graphene.Mutation):
     Output = StopDaemonPayload
+
+    @staticmethod
+    def description():
+        """Returns the description for this mutation. 
+        The String is fetched directly from the lnd grpc package
+        """
+        return process_lnd_doc_string(
+            lnrpc.LightningServicer.StopDaemon.__doc__)
 
     def mutate(
             self,

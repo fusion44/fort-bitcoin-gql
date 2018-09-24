@@ -40,6 +40,12 @@ class CreateLightningWalletMutation(graphene.Mutation):
 
     Output = CreateWalletPayload
 
+    @staticmethod
+    def description():
+        """Returns the description for this mutation. 
+        """
+        return "Creates a LND instance for the requesting user. This only creates the instance but does not initialize the wallet. This instance can be used to fetch the Wallet Seed now, until the user accepts the seed and initializes the wallet"
+
     def mutate(self, info, name: str, public_alias: str):
         if not info.context.user.is_authenticated:
             return Unauthenticated()

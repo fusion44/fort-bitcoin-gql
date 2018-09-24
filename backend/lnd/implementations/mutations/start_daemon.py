@@ -65,6 +65,11 @@ class StartDaemonMutation(graphene.Mutation):
 
     Output = StartDaemonPayload
 
+    @staticmethod
+    def description():
+        """Returns the description for this mutation."""
+        return "Starts the LND daemon and unlocks the wallet"
+
     def mutate(self, info, wallet_password: str, recovery_window: int = 0):
         """Starts the LND process and unlocks the wallet if user provides the password"""
 

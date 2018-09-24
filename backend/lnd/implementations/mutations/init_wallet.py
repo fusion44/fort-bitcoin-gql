@@ -14,7 +14,7 @@ from backend.error_responses import ServerError, Unauthenticated
 from backend.lnd.models import LNDWallet
 from backend.lnd.types import LnInfoType
 from backend.lnd.utils import (build_grpc_channel_manual,
-                               build_lnd_wallet_config)
+                               build_lnd_wallet_config, process_lnd_doc_string)
 
 
 class InitWalletSuccess(graphene.ObjectType):
@@ -73,6 +73,14 @@ class InitWalletMutation(graphene.Mutation):
         )
 
     Output = InitWalletPayload
+
+    @staticmethod
+    def description():
+        """Returns the description for this mutation. 
+        The String is fetched directly from the lnd grpc package
+        """
+        return process_lnd_doc_string(
+            lnrpc.WalletUnlockerServicer.InitWallet.__doc__)
 
     def mutate(self,
                info,

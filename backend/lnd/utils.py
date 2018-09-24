@@ -167,3 +167,13 @@ def lnd_instance_is_running(cfg: LNDWalletConfig) -> bool:
             .format(output))
 
     return psutil.pid_exists(int(output[0]))
+
+
+def process_lnd_doc_string(doc: str):
+    lines = doc.splitlines()
+    new_doc_string = ""
+    for line in lines:  # type: str
+        line = line.strip()
+        if line and not line.startswith("*"):
+            new_doc_string += line + " "
+    return new_doc_string
