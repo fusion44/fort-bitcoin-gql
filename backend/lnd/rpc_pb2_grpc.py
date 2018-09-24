@@ -233,6 +233,11 @@ class LightningStub(object):
         request_serializer=rpc__pb2.CloseChannelRequest.SerializeToString,
         response_deserializer=rpc__pb2.CloseStatusUpdate.FromString,
         )
+    self.AbandonChannel = channel.unary_unary(
+        '/lnrpc.Lightning/AbandonChannel',
+        request_serializer=rpc__pb2.AbandonChannelRequest.SerializeToString,
+        response_deserializer=rpc__pb2.AbandonChannelResponse.FromString,
+        )
     self.SendPayment = channel.stream_stream(
         '/lnrpc.Lightning/SendPayment',
         request_serializer=rpc__pb2.SendRequest.SerializeToString,
@@ -553,6 +558,17 @@ class LightningServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def AbandonChannel(self, request, context):
+    """* lncli: `abandonchannel`
+    AbandonChannel removes all channel state from the database except for a
+    close summary. This method can be used to get rid of permanently unusable
+    channels due to bugs fixed in newer versions of lnd. Only available
+    when in debug builds of lnd.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
   def SendPayment(self, request_iterator, context):
     """* lncli: `sendpayment`
     SendPayment dispatches a bi-directional streaming RPC for sending payments
@@ -608,7 +624,14 @@ class LightningServicer(object):
   def ListInvoices(self, request, context):
     """* lncli: `listinvoices`
     ListInvoices returns a list of all the invoices currently stored within the
-    database. Any active debug invoices are ignored.
+    database. Any active debug invoices are ignored. It has full support for
+    paginated responses, allowing users to query for specific invoices through
+    their add_index. This can be done by using either the first_index_offset or
+    last_index_offset fields included in the response as the index_offset of the
+    next request. The reversed flag is set by default in order to paginate
+    backwards. If you wish to paginate forwards, you must explicitly set the
+    flag to false. If none of the parameters are specified, then the last 100
+    invoices will be returned.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -890,6 +913,11 @@ def add_LightningServicer_to_server(servicer, server):
           servicer.CloseChannel,
           request_deserializer=rpc__pb2.CloseChannelRequest.FromString,
           response_serializer=rpc__pb2.CloseStatusUpdate.SerializeToString,
+      ),
+      'AbandonChannel': grpc.unary_unary_rpc_method_handler(
+          servicer.AbandonChannel,
+          request_deserializer=rpc__pb2.AbandonChannelRequest.FromString,
+          response_serializer=rpc__pb2.AbandonChannelResponse.SerializeToString,
       ),
       'SendPayment': grpc.stream_stream_rpc_method_handler(
           servicer.SendPayment,
