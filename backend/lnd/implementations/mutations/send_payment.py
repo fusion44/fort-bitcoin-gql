@@ -85,10 +85,14 @@ class SendPaymentMutation(graphene.Mutation):
             response = stub.SendPaymentSync(
                 request, metadata=[('macaroon', channel_data.macaroon)])
         except RpcError as exc:
+            # pylint: disable=E1101
             print(exc)
+            if exc.details().startswith("invoice expired"):
+                return SendPaymentMutation(
+                    payment_result=SendPaymentError(exc.details()))
             return SendPaymentMutation(
                 payment_result=ServerError.generic_rpc_error(
-                    exc.code, exc.details))  # pylint: disable=E1101
+                    exc.code(), exc.details()))
 
         json_data = json.loads(MessageToJson(response))
 

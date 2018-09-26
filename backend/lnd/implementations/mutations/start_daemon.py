@@ -133,8 +133,9 @@ def start_daemon_mutation(wallet: LNDWallet,
 
         time.sleep(2)
     except grpc.RpcError as exc:
+        # pylint: disable=E1101
         print(exc)
-        return ServerError.generic_rpc_error(exc.code, exc.details)  # pylint: disable=E1101
+        return ServerError.generic_rpc_error(exc.code(), exc.details())
 
     # build the channel to the newly started daemon
 
@@ -175,8 +176,9 @@ def start_daemon_mutation(wallet: LNDWallet,
         response = stub.GetInfo(
             request, metadata=[('macaroon', channel_data.macaroon)])
     except grpc.RpcError as exc:
+        # pylint: disable=E1101
         print(exc)
-        return ServerError.generic_rpc_error(exc.code, exc.details)  # pylint: disable=E1101
+        return ServerError.generic_rpc_error(exc.code(), exc.details())
 
     json_data = json.loads(
         MessageToJson(

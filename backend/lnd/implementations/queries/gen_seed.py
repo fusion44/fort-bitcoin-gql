@@ -95,8 +95,9 @@ def gen_seed_query(
     try:
         response = stub.GenSeed(request)
     except grpc.RpcError as exc:
+        # pylint: disable=E1101
         print(exc)
-        return ServerError.generic_rpc_error(exc.code, exc.details)  # pylint: disable=E1101
+        return ServerError.generic_rpc_error(exc.code(), exc.details())
 
     json_data = json.loads(
         MessageToJson(

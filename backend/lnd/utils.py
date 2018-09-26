@@ -71,11 +71,12 @@ def build_grpc_channel_manual(rpc_server,
 
         grpc.channel_ready_future(channel).result(timeout=2)
     except grpc.RpcError as exc:
+        # pylint: disable=E1101
         print(exc)
         return ChannelData(
             channel=None,
             macaroon=None,
-            error=ServerError.generic_rpc_error(exc.code, exc.details))  # pylint: disable=E1101
+            error=ServerError.generic_rpc_error(exc.code(), exc.details()))
     except grpc.FutureTimeoutError as exc:
         print(exc)
         return ChannelData(

@@ -94,8 +94,9 @@ class StopDaemonMutation(graphene.Mutation):
             response = stub.StopDaemon(
                 request, metadata=[('macaroon', channel_data.macaroon)])
         except grpc.RpcError as exc:
+            # pylint: disable=E1101
             print(exc)
-            return ServerError.generic_rpc_error(exc.code, exc.details)  # pylint: disable=E1101
+            return ServerError.generic_rpc_error(exc.code(), exc.details())
 
         start = time.time()
         while True:

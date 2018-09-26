@@ -81,9 +81,11 @@ class AddInvoiceMutation(graphene.Mutation):
             response = stub.AddInvoice(
                 request, metadata=[('macaroon', channel_data.macaroon)])
         except RpcError as exc:
+            # pylint: disable=E1101
             print(exc)
             return AddInvoiceMutation(
-                result=ServerError.generic_rpc_error(exc.code, exc.details))  # pylint: disable=E1101
+                result=ServerError.generic_rpc_error(exc.code(), exc.
+                                                     details()))
 
         json_data = json.loads(MessageToJson(response))
         return AddInvoiceMutation(

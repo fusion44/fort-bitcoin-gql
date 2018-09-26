@@ -152,8 +152,9 @@ def init_wallet_mutation(wallet: LNDWallet, wallet_password: str,
             time.sleep(2)
         time.sleep(5)
     except grpc.RpcError as exc:
+        # pylint: disable=E1101
         print(exc)
-        return ServerError.generic_rpc_error(exc.code, exc.details)  # pylint: disable=E1101
+        return ServerError.generic_rpc_error(exc.code(), exc.details())
 
     # Need to rebuild channel data because the macaroons
     # are only generated upon wallet initialization
