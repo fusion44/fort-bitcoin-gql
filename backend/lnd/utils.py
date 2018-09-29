@@ -68,8 +68,8 @@ def build_grpc_channel_manual(rpc_server,
         else:
             creds = grpc.ssl_channel_credentials(cert)
             channel = grpc.secure_channel(rpc_url, creds)
+            grpc.channel_ready_future(channel).result(timeout=2)
 
-        grpc.channel_ready_future(channel).result(timeout=2)
     except grpc.RpcError as exc:
         # pylint: disable=E1101
         print(exc)

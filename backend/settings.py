@@ -92,7 +92,7 @@ INSTALLED_APPS = [
     'backend.lnd',
     'backend.stats',
     'backend.user_profile',
-    "graphql_ws.django",
+    "backend.subscriptions",
     'graphene_django',
 ]
 
@@ -132,7 +132,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'backend.urls'
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-ASGI_APPLICATION = "graphql_ws.django.routing.session_application"
+ASGI_APPLICATION = "backend.subscriptions.routing.session_application"
 
 CACHES = {
     "default": {

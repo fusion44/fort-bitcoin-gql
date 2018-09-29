@@ -13,7 +13,6 @@ You'll need to have Python3 and pip installed.
 - clone the repository
 - copy config.ini.sample to config.ini and adapt the values to your requirements
 - add a new virtual environment: _mkvirtualenv fort-bitcoin-gql_
-- install a currently non standard graphql-ws version: _pip install https://github.com/SmileyChris/graphql-ws/archive/channels2.zip_
 - _pip install -r requirements.txt_
 - deactivate virtual environment to prevent some errors _deactivate_
 - use the environment: _workon fort-bitcoin-gql_

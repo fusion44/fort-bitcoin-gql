@@ -14,3 +14,5 @@ from .queries.get_info import GetInfoQuery
 from .queries.get_transactions import GetTransactionsQuery
 from .queries.get_wallet_balance import GetWalletBalanceQuery
 from .queries.list_payments import ListPaymentsQuery
+
+from .subscriptions.invoice_subscription import InvoiceSubscription
