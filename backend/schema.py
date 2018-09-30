@@ -11,10 +11,22 @@ import backend.lnd.schema
 import backend.stats.schema
 
 
+class Configuration(graphene.ObjectType):
+    testnet = graphene.Boolean(
+        description="True if server runs in testnet mode")
+
+
 class Query(backend.btc.schema_node.Query, backend.lnd.schema.Queries,
             backend.stats.schema.Query, graphene.ObjectType):
     # This class will inherit from multiple Queries
     # as we begin to add more apps to our project
+    get_configuration = graphene.Field(
+        Configuration, description="Get the current server configuration")
+
+    def resolve_get_configuration(self, info):
+        # This one has not authentication
+        return Configuration(testnet=True)
+
     pass
 
 
