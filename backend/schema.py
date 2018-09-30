@@ -9,6 +9,7 @@ import graphene
 import backend.btc.schema_node
 import backend.lnd.schema
 import backend.stats.schema
+import backend.user_profile.schema
 
 
 class Configuration(graphene.ObjectType):
@@ -27,10 +28,13 @@ class Query(backend.btc.schema_node.Query, backend.lnd.schema.Queries,
         # This one has not authentication
         return Configuration(testnet=True)
 
+
+class Mutations(backend.lnd.schema.LnMutations,
+                backend.user_profile.schema.UserMutations):
     pass
 
 
 schema = graphene.Schema(
     query=Query,
-    mutation=backend.lnd.schema.LnMutations,
-    subscription=backend.lnd.schema.InvoiceSubscription)
+    mutation=Mutations,
+    subscription=backend.lnd.schema.LnSubscriptions)
