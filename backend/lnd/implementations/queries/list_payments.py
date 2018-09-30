@@ -25,7 +25,7 @@ class ListPaymentsSuccess(graphene.ObjectType):
 class ListPaymentsResponse(graphene.Union):
     class Meta:
         types = (Unauthenticated, ServerError, ListPaymentsError,
-                 ListPaymentsSuccess)
+                 ListPaymentsSuccess, WalletInstanceNotFound)
 
 
 class ListPaymentsQuery(graphene.ObjectType):

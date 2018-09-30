@@ -25,7 +25,7 @@ class GetChannelBalanceSuccess(graphene.ObjectType):
 class GetChannelBalanceResponse(graphene.Union):
     class Meta:
         types = (Unauthenticated, ServerError, GetChannelBalanceError,
-                 GetChannelBalanceSuccess)
+                 GetChannelBalanceSuccess, WalletInstanceNotFound)
 
 
 class GetChannelBalanceQuery(graphene.ObjectType):
