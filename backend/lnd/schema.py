@@ -8,9 +8,8 @@ from backend.lnd.implementations import (
     AddInvoiceMutation, CreateLightningWalletMutation, DecodePayReqQuery,
     GenSeedQuery, GetChannelBalanceQuery, GetInfoQuery, GetTransactionsQuery,
     GetWalletBalanceQuery, InitWalletMutation, InvoiceSubscription,
-    ListPaymentsQuery, SendPaymentMutation, StartDaemonMutation,
-    StopDaemonMutation)
-from backend.lnd.utils import build_grpc_channel
+    ListPaymentsQuery, NewAddressQuery, SendPaymentMutation,
+    StartDaemonMutation, StopDaemonMutation)
 
 
 class Queries(
@@ -21,6 +20,7 @@ class Queries(
         GetTransactionsQuery,
         GetWalletBalanceQuery,
         ListPaymentsQuery,
+        NewAddressQuery,
 ):
     pass
 
