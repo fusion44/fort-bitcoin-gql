@@ -25,6 +25,13 @@ class WalletInstanceNotFound(graphene.ObjectType):
         "Use createLightningWallet and lnInitWallet to create the wallet")
 
 
+class WalletInstanceNotRunning(graphene.ObjectType):
+    error_message = graphene.String(
+        default_value="Wallet instance found, but it is not running")
+    suggestions = graphene.String(
+        default_value="Use startDaemon start the wallet")
+
+
 def ok() -> ResponseStatus:
     return ResponseStatus(200)
 

@@ -1,6 +1,7 @@
 """This module provides implementations for the lnd application"""
 
 from .mutations.add_invoice import AddInvoiceMutation
+from .mutations.connect_peer import ConnectPeerMutation
 from .mutations.create_wallet import CreateLightningWalletMutation
 from .mutations.init_wallet import InitWalletMutation
 from .mutations.send_payment import SendPaymentMutation
