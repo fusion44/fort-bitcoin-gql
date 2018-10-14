@@ -509,3 +509,27 @@ class LnChannel(graphene.ObjectType):
     )
     private = graphene.Boolean(
         description="Whether this channel is advertised to the network or not")
+
+
+class LnPeer(graphene.ObjectType):
+    """https://api.lightning.community/#peer"""
+
+    def __init__(self, data: dict):
+        super().__init__()
+        for attr in self.__dict__.keys():  # type: str
+            if attr in data:
+                setattr(self, attr, data[attr])
+
+    pub_key = graphene.String(description="The identity pubkey of the peer")
+    address = graphene.String(
+        description="Network address of the peer; eg 127.0.0.1:10011")
+    bytes_sent = graphene.String(
+        description="Bytes of data transmitted to this peer")
+    bytes_recv = graphene.String(
+        description="Bytes of data transmitted from this peer")
+    sat_sent = graphene.Int(description="Satoshis sent to this peer")
+    sat_recv = graphene.String(description="Satoshis received from this peer")
+    inbound = graphene.Boolean(
+        description=
+        "A channel is inbound if the counterparty initiated the channel")
+    ping_time = graphene.String(description="Ping time to this peer")

@@ -442,3 +442,39 @@ def test_ln_channel():
     assert len(inst.pending_htlcs) == len(fake_channels[1]["pending_htlcs"])
     assert inst.csv_delay == fake_channels[1]["csv_delay"]
     assert inst.private == fake_channels[1]["private"]
+
+
+def test_ln_peer():
+    fake_peers = [
+        {
+            "pub_key": fake.sha256(),
+            "address": "1.2.3.4:19735",
+            "bytes_sent": "80021",
+            "bytes_recv": "165970",
+            "sat_sent": "0",
+            "sat_recv": "0",
+            "inbound": False,
+            "ping_time": "65354"
+        },
+        {
+            "pub_key": fake.sha256(),
+            "address": "11.12.13.14:19735",
+            "bytes_sent": "92681",
+            "bytes_recv": "75375",
+            "sat_sent": "0",
+            "sat_recv": "0",
+            "inbound": False,
+            "ping_time": "65645"
+        },
+    ]
+
+    inst = types.LnPeer(fake_peers[1])
+    assert inst
+    assert inst.pub_key == fake_peers[1]["pub_key"]
+    assert inst.address == fake_peers[1]["address"]
+    assert inst.bytes_sent == fake_peers[1]["bytes_sent"]
+    assert inst.bytes_recv == fake_peers[1]["bytes_recv"]
+    assert inst.sat_sent == fake_peers[1]["sat_sent"]
+    assert inst.sat_recv == fake_peers[1]["sat_recv"]
+    assert inst.inbound == fake_peers[1]["inbound"]
+    assert inst.ping_time == fake_peers[1]["ping_time"]
