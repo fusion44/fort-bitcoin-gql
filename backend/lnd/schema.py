@@ -6,11 +6,12 @@ import graphene
 
 from backend.lnd.implementations import (
     AddInvoiceMutation, ConnectPeerMutation, CreateLightningWalletMutation,
-    DecodePayReqQuery, GenSeedQuery, GetChannelBalanceQuery, GetInfoQuery,
-    GetTransactionsQuery, GetWalletBalanceQuery, InitWalletMutation,
-    InvoiceSubscription, ListChannelsQuery, ListPaymentsQuery, ListPeersQuery,
-    NewAddressQuery, SendPaymentMutation, StartDaemonMutation,
-    StopDaemonMutation, TransactionSubscription)
+    DecodePayReqQuery, DisconnectPeerMutation, GenSeedQuery,
+    GetChannelBalanceQuery, GetInfoQuery, GetTransactionsQuery,
+    GetWalletBalanceQuery, InitWalletMutation, InvoiceSubscription,
+    ListChannelsQuery, ListPaymentsQuery, ListPeersQuery, NewAddressQuery,
+    SendPaymentMutation, StartDaemonMutation, StopDaemonMutation,
+    TransactionSubscription)
 
 
 class Queries(
@@ -40,6 +41,8 @@ class LnMutations(graphene.ObjectType):
         description=AddInvoiceMutation.description())
     ln_connect_peer = ConnectPeerMutation.Field(
         description=ConnectPeerMutation.description())
+    ln_disconnect_peer = DisconnectPeerMutation.Field(
+        description=DisconnectPeerMutation.description())
     ln_init_wallet = InitWalletMutation.Field(
         description=InitWalletMutation.description())
     start_daemon = StartDaemonMutation.Field(

@@ -3,6 +3,7 @@
 from .mutations.add_invoice import AddInvoiceMutation
 from .mutations.connect_peer import ConnectPeerMutation
 from .mutations.create_wallet import CreateLightningWalletMutation
+from .mutations.disconnect_peer import DisconnectPeerMutation
 from .mutations.init_wallet import InitWalletMutation
 from .mutations.send_payment import SendPaymentMutation
 from .mutations.start_daemon import StartDaemonMutation
