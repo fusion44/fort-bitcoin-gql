@@ -10,6 +10,23 @@ fake = Faker()
 # pylint: skip-file
 
 
+def make_fake_htlcs():
+    return [
+        {
+            "incoming": True,
+            "amount": 13235425345,
+            "hash_lock": fake.sha256(),
+            "expiration_height": 525243,
+        },
+        {
+            "incoming": False,
+            "amount": 2252,
+            "hash_lock": fake.sha256(),
+            "expiration_height": 525246,
+        },
+    ]
+
+
 def make_fake_ln_hop_type():
     return {
         "chan_id": fake.pystr(),
@@ -211,23 +228,26 @@ def test_ln_transaction():
 
 
 def test_ln_transaction_details():
-    fake_transactions = [{
-        'amount': fake.pyint(),
-        'block_hash': fake.sha256(),
-        'block_height': fake.pyint(),
-        'dest_addresses': [fake.sha256(), fake.sha256()],
-        'num_confirmations': fake.pyint(),
-        'time_stamp': fake.unix_time(),
-        'tx_hash': fake.sha256()
-    }, {
-        'amount': fake.pyint(),
-        'block_hash': fake.sha256(),
-        'block_height': fake.pyint(),
-        'dest_addresses': [fake.sha256(), fake.sha256()],
-        'num_confirmations': fake.pyint(),
-        'time_stamp': fake.unix_time(),
-        'tx_hash': fake.sha256()
-    }]
+    fake_transactions = [
+        {
+            'amount': fake.pyint(),
+            'block_hash': fake.sha256(),
+            'block_height': fake.pyint(),
+            'dest_addresses': [fake.sha256(), fake.sha256()],
+            'num_confirmations': fake.pyint(),
+            'time_stamp': fake.unix_time(),
+            'tx_hash': fake.sha256()
+        },
+        {
+            'amount': fake.pyint(),
+            'block_hash': fake.sha256(),
+            'block_height': fake.pyint(),
+            'dest_addresses': [fake.sha256(), fake.sha256()],
+            'num_confirmations': fake.pyint(),
+            'time_stamp': fake.unix_time(),
+            'tx_hash': fake.sha256()
+        },
+    ]
     inst = types.LnTransactionDetails({'transactions': fake_transactions})
 
     assert inst
@@ -235,19 +255,22 @@ def test_ln_transaction_details():
 
 
 def test_ln_invoice():
-    hop_hints = [{
-        "node_id": fake.pystr(),
-        "chan_id": fake.pyint(),
-        "fee_base_msat": fake.pyint(),
-        "fee_proportional_millionths": fake.pyint(),
-        "cltv_expiry_delta": fake.pyint()
-    }, {
-        "node_id": fake.pystr(),
-        "chan_id": fake.pyint(),
-        "fee_base_msat": fake.pyint(),
-        "fee_proportional_millionths": fake.pyint(),
-        "cltv_expiry_delta": fake.pyint()
-    }]
+    hop_hints = [
+        {
+            "node_id": fake.pystr(),
+            "chan_id": fake.pyint(),
+            "fee_base_msat": fake.pyint(),
+            "fee_proportional_millionths": fake.pyint(),
+            "cltv_expiry_delta": fake.pyint()
+        },
+        {
+            "node_id": fake.pystr(),
+            "chan_id": fake.pyint(),
+            "fee_base_msat": fake.pyint(),
+            "fee_proportional_millionths": fake.pyint(),
+            "cltv_expiry_delta": fake.pyint()
+        },
+    ]
     invoice = {
         "memo": fake.pystr(),
         "receipt": fake.sha256(),
@@ -314,23 +337,108 @@ def test_ln_payment():
 
 
 def test_ln_payment_response():
-    fake_payments = [{
-        "payment_hash": fake.sha256(),
-        "value": fake.pyint(),
-        "creation_date": fake.unix_time(),
-        "path": [fake.sha256(), fake.sha256()],
-        "fee": fake.pyint(),
-        "payment_preimage": fake.sha256()
-    }, {
-        "payment_hash": fake.sha256(),
-        "value": fake.pyint(),
-        "creation_date": fake.unix_time(),
-        "path": [fake.sha256(), fake.sha256()],
-        "fee": fake.pyint(),
-        "payment_preimage": fake.sha256()
-    }]
+    fake_payments = [
+        {
+            "payment_hash": fake.sha256(),
+            "value": fake.pyint(),
+            "creation_date": fake.unix_time(),
+            "path": [fake.sha256(), fake.sha256()],
+            "fee": fake.pyint(),
+            "payment_preimage": fake.sha256()
+        },
+        {
+            "payment_hash": fake.sha256(),
+            "value": fake.pyint(),
+            "creation_date": fake.unix_time(),
+            "path": [fake.sha256(), fake.sha256()],
+            "fee": fake.pyint(),
+            "payment_preimage": fake.sha256()
+        },
+    ]
 
     inst = types.LnListPaymentsResponse({'payments': fake_payments})
 
     assert inst
     assert len(inst.payments) == 2
+
+
+def test_ln_htlc():
+    fakehtlcs = make_fake_htlcs()
+    inst = types.LnHTLC(fakehtlcs[0])
+
+    assert inst
+    assert inst.incoming == fakehtlcs[0]["incoming"]
+    assert inst.amount == fakehtlcs[0]["amount"]
+    assert inst.hash_lock == fakehtlcs[0]["hash_lock"]
+    assert inst.expiration_height == fakehtlcs[0]["expiration_height"]
+
+    inst = types.LnHTLC(fakehtlcs[1])
+
+    assert inst
+    assert inst.incoming == fakehtlcs[1]["incoming"]
+    assert inst.amount == fakehtlcs[1]["amount"]
+    assert inst.hash_lock == fakehtlcs[1]["hash_lock"]
+    assert inst.expiration_height == fakehtlcs[1]["expiration_height"]
+
+
+def test_ln_channel():
+    fake_channels = [
+        {
+            "active": True,
+            "remote_pubkey": fake.sha256(),
+            "channel_point": fake.sha256(),
+            "chan_id": "1578842622393712641",
+            "capacity": 5708945,
+            "local_balance": 5708480,
+            "remote_balance": 0,
+            "commit_fee": 465,
+            "commit_weight": 600,
+            "fee_per_kw": 643,
+            "unsettled_balance": 0,
+            "total_satoshis_sent": 0,
+            "total_satoshis_received": 0,
+            "num_updates": 15,
+            "csv_delay": 686,
+            "private": False,
+            "pending_htlcs": make_fake_htlcs()
+        },
+        {
+            "active": True,
+            "remote_pubkey": fake.sha256(),
+            "channel_point": fake.sha256(),
+            "chan_id": "1554865572332175360",
+            "capacity": 16777215,
+            "local_balance": 16776676,
+            "remote_balance": 0,
+            "commit_fee": 539,
+            "commit_weight": 600,
+            "fee_per_kw": 745,
+            "unsettled_balance": 0,
+            "total_satoshis_sent": 0,
+            "total_satoshis_received": 0,
+            "num_updates": 47,
+            "csv_delay": 2016,
+            "private": True,
+            "pending_htlcs": make_fake_htlcs()
+        },
+    ]
+    inst = types.LnChannel(fake_channels[1])
+    assert inst
+    assert inst.active == fake_channels[1]["active"]
+    assert inst.remote_pubkey == fake_channels[1]["remote_pubkey"]
+    assert inst.channel_point == fake_channels[1]["channel_point"]
+    assert inst.chan_id == fake_channels[1]["chan_id"]
+    assert inst.capacity == fake_channels[1]["capacity"]
+    assert inst.local_balance == fake_channels[1]["local_balance"]
+    assert inst.remote_balance == fake_channels[1]["remote_balance"]
+    assert inst.commit_fee == fake_channels[1]["commit_fee"]
+    assert inst.commit_weight == fake_channels[1]["commit_weight"]
+    assert inst.fee_per_kw == fake_channels[1]["fee_per_kw"]
+    assert inst.unsettled_balance == fake_channels[1]["unsettled_balance"]
+    assert inst.total_satoshis_sent == fake_channels[1]["total_satoshis_sent"]
+    assert inst.total_satoshis_received == fake_channels[1][
+        "total_satoshis_received"]
+    assert inst.num_updates == fake_channels[1]["num_updates"]
+    assert len(inst.pending_htlcs) == len(fake_channels[1]["pending_htlcs"])
+    assert inst.csv_delay == fake_channels[1]["csv_delay"]
+    assert inst.private == fake_channels[1]["private"]

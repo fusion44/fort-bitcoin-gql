@@ -431,3 +431,81 @@ class LnFeeLimit(graphene.InputObjectType):
     percent = graphene.Int(
         description=
         "The fee limit expressed as a percentage of the payment amount.")
+
+
+class LnHTLC(graphene.ObjectType):
+    def __init__(self, data: dict):
+        super().__init__()
+        for attr in self.__dict__.keys():  # type: str
+            if attr in data:
+                setattr(self, attr, data[attr])
+
+    incoming = graphene.Boolean()
+    amount = graphene.Int()
+    hash_lock = graphene.String()
+    expiration_height = graphene.Int()
+
+
+class LnChannel(graphene.ObjectType):
+    def __init__(self, data: dict):
+        super().__init__()
+        for attr in self.__dict__.keys():  # type: str
+            if attr in data:
+                if attr == "pending_htlcs":
+                    htlcs = []
+                    for htlc in data[attr]:
+                        htlcs.append(LnHTLC(htlc))
+                    self.pending_htlcs = htlcs
+                else:
+                    setattr(self, attr, data[attr])
+
+    active = graphene.Boolean(
+        description="Whether this channel is active or not")
+    remote_pubkey = graphene.String(
+        description="The identity pubkey of the remote node")
+    channel_point = graphene.String(
+        description=
+        "The outpoint (txid:index) of the funding transaction. With this value, Bob will be able to generate a signature for Alice’s version of the commitment transaction."
+    )
+    chan_id = graphene.String(
+        description=
+        "The unique channel ID for the channel. The first 3 bytes are the block height, the next 3 the index within the block, and the last 2 bytes are the output index for the channel."
+    )
+    capacity = graphene.Int(
+        description="The total amount of funds held in this channel")
+    local_balance = graphene.Int(
+        description="This node’s current balance in this channel")
+    remote_balance = graphene.Int(
+        description="The counterparty’s current balance in this channel")
+    commit_fee = graphene.Int(
+        description=
+        "The amount calculated to be paid in fees for the current set of commitment transactions. The fee amount is persisted with the channel in order to allow the fee amount to be removed and recalculated with each channel state update, including updates that happen after a system restart."
+    )
+    commit_weight = graphene.Int(
+        description="The weight of the commitment transaction")
+    fee_per_kw = graphene.Int(
+        description=
+        "The required number of satoshis per kilo-weight that the requester will pay at all times, for both the funding transaction and commitment transaction. This value can later be updated once the channel is open."
+    )
+    unsettled_balance = graphene.Int(
+        description="The unsettled balance in this channel")
+    total_satoshis_sent = graphene.Int(
+        description=
+        "The total number of satoshis we’ve sent within this channel.")
+    total_satoshis_received = graphene.Int(
+        description=
+        "The total number of satoshis we’ve received within this channel.")
+    num_updates = graphene.Int(
+        description="The total number of updates conducted within this channel."
+    )
+    pending_htlcs = graphene.List(
+        LnHTLC,
+        description=
+        "The list of active, uncleared HTLCs currently pending within the channel."
+    )
+    csv_delay = graphene.Int(
+        description=
+        "The CSV delay expressed in relative blocks. If the channel is force closed, we’ll need to wait for this many blocks before we can regain our funds."
+    )
+    private = graphene.Boolean(
+        description="Whether this channel is advertised to the network or not")
