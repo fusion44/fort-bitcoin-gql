@@ -523,13 +523,13 @@ class LnPeer(graphene.ObjectType):
     pub_key = graphene.String(description="The identity pubkey of the peer")
     address = graphene.String(
         description="Network address of the peer; eg 127.0.0.1:10011")
-    bytes_sent = graphene.String(
+    bytes_sent = graphene.Int(
         description="Bytes of data transmitted to this peer")
-    bytes_recv = graphene.String(
+    bytes_recv = graphene.Int(
         description="Bytes of data transmitted from this peer")
     sat_sent = graphene.Int(description="Satoshis sent to this peer")
-    sat_recv = graphene.String(description="Satoshis received from this peer")
+    sat_recv = graphene.Int(description="Satoshis received from this peer")
     inbound = graphene.Boolean(
         description=
         "A channel is inbound if the counterparty initiated the channel")
-    ping_time = graphene.String(description="Ping time to this peer")
+    ping_time = graphene.Int(description="Ping time to this peer")
