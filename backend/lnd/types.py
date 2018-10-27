@@ -533,3 +533,6 @@ class LnPeer(graphene.ObjectType):
         description=
         "A channel is inbound if the counterparty initiated the channel")
     ping_time = graphene.Int(description="Ping time to this peer")
+    has_channel = graphene.Boolean(
+        description="Whether we have an open channel with this peer",
+        default_value=False)

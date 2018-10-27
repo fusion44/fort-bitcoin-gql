@@ -44,10 +44,38 @@ class ListPeersQuery(graphene.ObjectType):
         if not res:
             return WalletInstanceNotFound()
 
-        return list_peers_query(res.first())
+        return list_peers_query(info, res.first())
 
 
-def list_peers_query(wallet: LNDWallet):
+def get_peer_has_channel(channel_data, peer_list):
+    stub = lnrpc.LightningStub(channel_data.channel)
+    request = ln.ListChannelsRequest()
+
+    try:
+        response = stub.ListChannels(
+            request, metadata=[('macaroon', channel_data.macaroon)])
+    except grpc.RpcError as exc:
+        print(exc)
+        raise exc
+
+    json_data = json.loads(
+        MessageToJson(
+            response,
+            preserving_proto_field_name=True,
+            including_default_value_fields=True,
+        ))
+    temp_map = {}
+    for peer in peer_list:
+        temp_map[peer.pub_key] = peer
+
+    for channel in json_data["channels"]:
+        try:
+            temp_map[channel["remote_pubkey"]].has_channel = True
+        except KeyError:
+            pass
+
+
+def list_peers_query(info, wallet: LNDWallet):
     cfg = build_lnd_wallet_config(wallet.pk)
 
     channel_data = build_grpc_channel_manual(
@@ -78,4 +106,14 @@ def list_peers_query(wallet: LNDWallet):
     peer_list = []
     for c in json_data["peers"]:
         peer_list.append(LnPeer(c))
+
+    for selection in info.field_asts[0].selection_set.selections:
+        if hasattr(selection, "type_condition"):
+            if selection.type_condition.name.value == "ListPeersSuccess":
+                for field in selection.selection_set.selections[
+                        0].selection_set.selections:
+                    if field.name.value == "hasChannel":
+                        get_peer_has_channel(channel_data, peer_list)
+                        break
+
     return ListPeersSuccess(peer_list)
