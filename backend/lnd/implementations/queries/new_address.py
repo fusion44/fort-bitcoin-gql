@@ -7,7 +7,8 @@ from google.protobuf.json_format import MessageToJson
 import backend.lnd.rpc_pb2 as ln
 import backend.lnd.rpc_pb2_grpc as lnrpc
 from backend.error_responses import (ServerError, Unauthenticated,
-                                     WalletInstanceNotFound)
+                                     WalletInstanceNotFound,
+                                     WalletInstanceNotRunning)
 from backend.lnd.models import LNDWallet
 from backend.lnd.utils import (build_grpc_channel_manual,
                                build_lnd_wallet_config, process_lnd_doc_string)
@@ -24,7 +25,7 @@ class NewAddressSuccess(graphene.ObjectType):
 class NewAddressPayload(graphene.Union):
     class Meta:
         types = (Unauthenticated, ServerError, WalletInstanceNotFound,
-                 NewAddressError, NewAddressSuccess)
+                 WalletInstanceNotRunning, NewAddressError, NewAddressSuccess)
 
 
 class NewAddressQuery(graphene.ObjectType):

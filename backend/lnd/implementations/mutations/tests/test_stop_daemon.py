@@ -5,10 +5,8 @@ from django.test import RequestFactory
 from mixer.backend.django import mixer
 
 import backend
-from backend.error_responses import Unauthenticated
+from backend.error_responses import Unauthenticated, WalletInstanceNotFound
 from backend.lnd.implementations import StopDaemonMutation
-from backend.lnd.implementations.mutations.stop_daemon import (
-    StopDaemonInstanceNotFound, StopDaemonInstanceNotRunning)
 from backend.lnd.models import LNDWallet
 from backend.lnd.utils import ChannelData
 from backend.test_utils import utils
@@ -44,20 +42,7 @@ def test_stop_daemon(monkeypatch: MonkeyPatch):
     # so it should not return the other users wallet
     mixer.blend(LNDWallet, owner=mixer.blend("auth.User"))
 
-    assert isinstance(ret, StopDaemonInstanceNotFound
-                      ), "Should be an instance of StopDaemonInstanceNotFound"
+    assert isinstance(ret, WalletInstanceNotFound
+                      ), "Should be an instance of WalletInstanceNotFound"
 
     mixer.blend(LNDWallet, owner=req.user)
-
-    # Fake lnd instance is running function to return True
-    monkeypatch.setattr(backend.lnd.implementations.mutations.stop_daemon,
-                        "lnd_instance_is_running", lambda cfg: False)
-
-    ret = mut.mutate(resolve_info)
-
-    assert isinstance(ret, StopDaemonInstanceNotRunning
-                      ), "Should throw a StopDaemonInstanceNotRunning"
-
-    # For the rest of the test we'll assume the wallet is running
-    monkeypatch.setattr(backend.lnd.implementations.mutations.stop_daemon,
-                        "lnd_instance_is_running", lambda cfg: True)

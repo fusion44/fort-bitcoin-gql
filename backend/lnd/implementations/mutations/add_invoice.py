@@ -8,7 +8,8 @@ from grpc import RpcError
 import backend.lnd.rpc_pb2 as ln
 import backend.lnd.rpc_pb2_grpc as lnrpc
 from backend.error_responses import (ServerError, Unauthenticated,
-                                     WalletInstanceNotFound)
+                                     WalletInstanceNotFound,
+                                     WalletInstanceNotRunning)
 from backend.lnd.models import LNDWallet
 from backend.lnd.types import LnAddInvoiceResponse
 from backend.lnd.utils import (build_grpc_channel_manual,
@@ -27,7 +28,8 @@ class AddInvoiceError(graphene.ObjectType):
 class AddInvoicePayload(graphene.Union):
     class Meta:
         types = (Unauthenticated, ServerError, AddInvoiceError,
-                 AddInvoiceSuccess)
+                 AddInvoiceSuccess, WalletInstanceNotFound,
+                 WalletInstanceNotRunning)
 
 
 class AddInvoiceMutation(graphene.Mutation):

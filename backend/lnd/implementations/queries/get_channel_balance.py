@@ -7,7 +7,8 @@ from google.protobuf.json_format import MessageToJson
 import backend.lnd.rpc_pb2 as ln
 import backend.lnd.rpc_pb2_grpc as lnrpc
 from backend.error_responses import (ServerError, Unauthenticated,
-                                     WalletInstanceNotFound)
+                                     WalletInstanceNotFound,
+                                     WalletInstanceNotRunning)
 from backend.lnd.models import LNDWallet
 from backend.lnd.types import LnChannelBalance
 from backend.lnd.utils import (build_grpc_channel_manual,
@@ -25,7 +26,8 @@ class GetChannelBalanceSuccess(graphene.ObjectType):
 class GetChannelBalanceResponse(graphene.Union):
     class Meta:
         types = (Unauthenticated, ServerError, GetChannelBalanceError,
-                 GetChannelBalanceSuccess, WalletInstanceNotFound)
+                 GetChannelBalanceSuccess, WalletInstanceNotFound,
+                 WalletInstanceNotRunning)
 
 
 class GetChannelBalanceQuery(graphene.ObjectType):

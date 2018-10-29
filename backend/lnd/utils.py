@@ -12,7 +12,7 @@ import aiogrpc
 import grpc
 import psutil
 
-from backend.error_responses import ServerError
+from backend.error_responses import ServerError, WalletInstanceNotRunning
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read("config.ini")
@@ -80,44 +80,8 @@ def build_grpc_channel_manual(rpc_server,
     except grpc.FutureTimeoutError as exc:
         print(exc)
         return ChannelData(
-            channel=None,
-            macaroon=None,
-            error=ServerError(error_message="gRPC connection timeout"))
+            channel=None, macaroon=None, error=WalletInstanceNotRunning())
 
-    return ChannelData(channel=channel, macaroon=macaroon, error=None)
-
-
-def build_grpc_channel(testnet=False, is_async=False,
-                       macaroon=True) -> ChannelData:
-    """Builds a gRPC channel
-    
-    testnet: True if channel should be build for testnet
-    is_async: Set to true if it is handled as a stream
-    """
-    rpc_server = CONFIG["LND_MAINNET"]["rpc_server"]
-    rpc_port = CONFIG["LND_MAINNET"]["rpc_port"]
-    cert_path = CONFIG["LND_MAINNET"]["lnd_cert_file"]
-    macaroon_path = CONFIG["LND_MAINNET"]["lnd_macaroon"]
-
-    if testnet:
-        rpc_server = CONFIG["LND_TESTNET"]["rpc_server"]
-        rpc_port = CONFIG["LND_TESTNET"]["rpc_port"]
-        cert_path = CONFIG["LND_TESTNET"]["lnd_cert_file"]
-        macaroon_path = CONFIG["LND_TESTNET"]["lnd_macaroon"]
-
-    with open(macaroon_path, 'rb') as f:
-        macaroon_bytes = f.read()
-        macaroon = codecs.encode(macaroon_bytes, 'hex')
-        f.close()
-
-    rpc_url = "{}:{}".format(rpc_server, rpc_port)
-    cert = open(cert_path, "rb").read()
-    if is_async:
-        creds = aiogrpc.ssl_channel_credentials(cert)
-        channel = aiogrpc.secure_channel(rpc_url, creds)
-    else:
-        creds = grpc.ssl_channel_credentials(cert)
-        channel = grpc.secure_channel(rpc_url, creds)
     return ChannelData(channel=channel, macaroon=macaroon, error=None)
 
 

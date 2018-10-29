@@ -8,7 +8,8 @@ from google.protobuf.json_format import MessageToJson
 
 import backend.lnd.rpc_pb2 as ln
 import backend.lnd.rpc_pb2_grpc as lnrpc
-from backend.error_responses import ServerError, Unauthenticated
+from backend.error_responses import (ServerError, Unauthenticated,
+                                     WalletInstanceNotRunning)
 from backend.lnd.models import LNDWallet
 from backend.lnd.types import LnGenSeedResponse
 from backend.lnd.utils import (build_grpc_channel_manual,
@@ -34,7 +35,7 @@ class GenSeedSuccess(graphene.ObjectType):
 class GenSeedPayload(graphene.Union):
     class Meta:
         types = (Unauthenticated, ServerError, GenSeedWalletInstanceNotFound,
-                 GenSeedError, GenSeedSuccess)
+                 WalletInstanceNotRunning, GenSeedError, GenSeedSuccess)
 
 
 class GenSeedQuery(graphene.ObjectType):

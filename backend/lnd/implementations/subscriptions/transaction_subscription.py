@@ -6,7 +6,8 @@ from google.protobuf.json_format import MessageToJson
 import backend.lnd.rpc_pb2 as ln
 import backend.lnd.rpc_pb2_grpc as lnrpc
 from backend.error_responses import (ServerError, Unauthenticated,
-                                     WalletInstanceNotFound)
+                                     WalletInstanceNotFound,
+                                     WalletInstanceNotRunning)
 from backend.lnd.models import LNDWallet
 from backend.lnd.types import LnTransaction
 from backend.lnd.utils import (build_grpc_channel_manual,
@@ -26,7 +27,7 @@ class TransactionSubError(graphene.ObjectType):
 class TransactionSubPayload(graphene.Union):
     class Meta:
         types = (Unauthenticated, ServerError, TransactionSubError,
-                 TransactionSubSuccess)
+                 TransactionSubSuccess, WalletInstanceNotRunning)
 
 
 class TransactionSubscription(graphene.ObjectType):

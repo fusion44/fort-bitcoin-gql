@@ -7,7 +7,9 @@ from django.db.models import QuerySet
 
 import backend.lnd.rpc_pb2 as ln
 import backend.lnd.rpc_pb2_grpc as lnrpc
-from backend.error_responses import ServerError, Unauthenticated
+from backend.error_responses import (ServerError, Unauthenticated,
+                                     WalletInstanceNotFound,
+                                     WalletInstanceNotRunning)
 from backend.lnd.models import LNDWallet
 from backend.lnd.types import LnInfoType
 from backend.lnd.utils import (LNDWalletConfig, build_grpc_channel_manual,
@@ -19,30 +21,14 @@ class StopDaemonSuccess(graphene.ObjectType):
     info = graphene.Field(LnInfoType)
 
 
-class StopDaemonInstanceNotFound(graphene.ObjectType):
-    error_message = graphene.String(
-        default_value="No wallet instance found for User")
-    suggestions = graphene.String(
-        default_value=
-        "Use createLightningWallet and lnInitWallet to create the wallet")
-
-
-class StopDaemonInstanceNotRunning(graphene.ObjectType):
-    error_message = graphene.String(
-        default_value="The instance is not running")
-    suggestions = graphene.String(
-        default_value="Use startDaemon to start the wallet instance")
-
-
 class StopDaemonError(graphene.ObjectType):
     error_message = graphene.String()
 
 
 class StopDaemonPayload(graphene.Union):
     class Meta:
-        types = (Unauthenticated, ServerError, StopDaemonInstanceNotFound,
-                 StopDaemonInstanceNotRunning, StopDaemonError,
-                 StopDaemonSuccess)
+        types = (Unauthenticated, ServerError, WalletInstanceNotFound,
+                 StopDaemonError, StopDaemonSuccess, WalletInstanceNotRunning)
 
 
 class StopDaemonMutation(graphene.Mutation):
@@ -68,14 +54,11 @@ class StopDaemonMutation(graphene.Mutation):
         res: QuerySet = LNDWallet.objects.filter(owner=info.context.user)
 
         if not res:
-            return StopDaemonInstanceNotFound()
+            return WalletInstanceNotFound()
 
         wallet: LNDWallet = res.first()
 
         cfg: LNDWalletConfig = build_lnd_wallet_config(wallet.pk)
-
-        if not lnd_instance_is_running(cfg):
-            return StopDaemonInstanceNotRunning()
 
         channel_data = build_grpc_channel_manual(
             rpc_server="127.0.0.1",

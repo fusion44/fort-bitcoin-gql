@@ -9,8 +9,7 @@ from backend.error_responses import (ServerError, Unauthenticated,
                                      WalletInstanceNotRunning)
 from backend.lnd.models import LNDWallet
 from backend.lnd.utils import (LNDWalletConfig, build_grpc_channel_manual,
-                               build_lnd_wallet_config,
-                               lnd_instance_is_running, process_lnd_doc_string)
+                               build_lnd_wallet_config, process_lnd_doc_string)
 
 
 class ConnectPeerSuccess(graphene.ObjectType):
@@ -29,7 +28,8 @@ class ConnectPeerError(graphene.ObjectType):
 class ConnectPeerPayload(graphene.Union):
     class Meta:
         types = (Unauthenticated, ServerError, ConnectPeerError,
-                 WalletInstanceNotFound, ConnectPeerSuccess)
+                 WalletInstanceNotFound, WalletInstanceNotRunning,
+                 ConnectPeerSuccess)
 
 
 class ConnectPeerMutation(graphene.Mutation):
@@ -72,9 +72,6 @@ class ConnectPeerMutation(graphene.Mutation):
         wallet: LNDWallet = res.first()
 
         cfg: LNDWalletConfig = build_lnd_wallet_config(wallet.pk)
-
-        if not lnd_instance_is_running(cfg):
-            return WalletInstanceNotRunning()
 
         channel_data = build_grpc_channel_manual(
             rpc_server="127.0.0.1",
