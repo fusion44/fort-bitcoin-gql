@@ -13,9 +13,11 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 import configparser
 import datetime
 import os
-import logging
 
 from django.utils.log import DEFAULT_LOGGING
+
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 LOGGING = {
     'version': 1,
@@ -36,12 +38,20 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
+        'logfile': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR + "/logfile.log",
+            'maxBytes': 50000,
+            'backupCount': 2,
+            'formatter': 'simple',
+        },
         'django.server': DEFAULT_LOGGING['handlers']['django.server'],
     },
     'loggers': {
         '': {
             'level': 'WARNING',
-            'handlers': ['console'],
+            'handlers': ['console', 'logfile'],
         },
         'backend': {
             'level': 'INFO',
@@ -60,9 +70,6 @@ LOGGING = {
 CONFIG = configparser.ConfigParser()
 CONFIG.read("config.ini")
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
@@ -79,6 +86,7 @@ ALLOWED_HOSTS = ['30a179ba.ngrok.io']
 # Application definition
 
 INSTALLED_APPS = [
+    'django_celery_beat',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -212,3 +220,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+CELERY_BROKER_URL = CONFIG['DEFAULT']['celery_broker_url']
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TRACK_STARTED = True

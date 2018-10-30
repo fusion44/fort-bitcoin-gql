@@ -14,3 +14,7 @@ class LNDWallet(models.Model):
     name = models.CharField(max_length=100)
     testnet = models.BooleanField(default=False)
     initialized = models.BooleanField(default=False)
+
+
+class IPAddress(models.Model):
+    ip_address = models.GenericIPAddressField()

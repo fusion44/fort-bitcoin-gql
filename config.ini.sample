@@ -2,6 +2,7 @@
 # Used in settings.py
 SECRET_KEY = 'your_secret_key'
 LND_DATA_PATH = 'path_to_LND_instance_data'
+celery_broker_url = amqp://localhost//
 
 [BITCOIND_MAINNET]
 # Boolean: True, False

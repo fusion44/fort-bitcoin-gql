@@ -4,6 +4,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
 
 from django.contrib import admin
-from backend.lnd.models import LNDWallet
+from backend.lnd.models import LNDWallet, IPAddress
 
 admin.site.register(LNDWallet)
+admin.site.register(IPAddress)
