@@ -68,6 +68,9 @@ class LnInfoType(graphene.ObjectType):
     version = graphene.String(
         description="The version of the LND software that the node is running."
     )
+    current_ip = graphene.String(
+        description="Public ip the node is reachable from.")
+    current_port = graphene.Int(description="Port the node is reachable from")
 
 
 class LnChannelBalance(graphene.ObjectType):

@@ -10,7 +10,7 @@ import backend.lnd.rpc_pb2_grpc as lnrpc
 from backend.error_responses import (ServerError, Unauthenticated,
                                      WalletInstanceNotFound,
                                      WalletInstanceNotRunning)
-from backend.lnd.models import LNDWallet
+from backend.lnd.models import IPAddress, LNDWallet
 from backend.lnd.types import LnInfoType
 from backend.lnd.utils import (build_grpc_channel_manual,
                                build_lnd_wallet_config)
@@ -77,4 +77,9 @@ def get_info_query(wallet: LNDWallet) -> LnInfoType:
             preserving_proto_field_name=True,
             including_default_value_fields=True,
         ))
-    return GetInfoSuccess(LnInfoType(json_data))
+
+    ln_info = LnInfoType(json_data)
+    ip = IPAddress.objects.get(pk=1)  # type: IPAddress
+    ln_info.current_ip = ip.ip_address
+    ln_info.current_port = cfg.listen_port_ipv4
+    return GetInfoSuccess(ln_info)
