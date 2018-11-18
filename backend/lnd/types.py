@@ -539,3 +539,15 @@ class LnPeer(graphene.ObjectType):
     has_channel = graphene.Boolean(
         description="Whether we have an open channel with this peer",
         default_value=False)
+
+
+class ChannelPoint(graphene.ObjectType):
+    def __init__(self, funding_txid, output_index):
+        super().__init__()
+        self.funding_txid = funding_txid
+        self.output_index = output_index
+
+    funding_txid = graphene.String(
+        description="String representing the funding transaction")
+    output_index = graphene.Int(
+        description="The index of the output of the funding transaction")

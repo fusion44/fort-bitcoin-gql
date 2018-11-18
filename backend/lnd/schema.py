@@ -10,8 +10,8 @@ from backend.lnd.implementations import (
     GetChannelBalanceQuery, GetInfoQuery, GetTransactionsQuery,
     GetWalletBalanceQuery, InitWalletMutation, InvoiceSubscription,
     ListChannelsQuery, ListPaymentsQuery, ListPeersQuery, NewAddressQuery,
-    SendPaymentMutation, StartDaemonMutation, StopDaemonMutation,
-    TransactionSubscription)
+    OpenChannelSubscription, SendPaymentMutation, StartDaemonMutation,
+    StopDaemonMutation, TransactionSubscription)
 
 
 class Queries(
@@ -51,5 +51,6 @@ class LnMutations(graphene.ObjectType):
         description=StopDaemonMutation.description())
 
 
-class LnSubscriptions(InvoiceSubscription, TransactionSubscription):
+class LnSubscriptions(InvoiceSubscription, OpenChannelSubscription,
+                      TransactionSubscription):
     pass
