@@ -21,5 +21,6 @@ from .queries.list_peers import ListPeersQuery
 from .queries.new_address import NewAddressQuery
 
 from .subscriptions.invoice_subscription import InvoiceSubscription
+from .subscriptions.close_channel_subscription import CloseChannelSubscription
 from .subscriptions.open_channel_subscription import OpenChannelSubscription
 from .subscriptions.transaction_subscription import TransactionSubscription

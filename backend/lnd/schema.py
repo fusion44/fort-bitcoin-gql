@@ -5,9 +5,9 @@ For a full description of all available API"s see https://api.lightning.communit
 import graphene
 
 from backend.lnd.implementations import (
-    AddInvoiceMutation, ConnectPeerMutation, CreateLightningWalletMutation,
-    DecodePayReqQuery, DisconnectPeerMutation, GenSeedQuery,
-    GetChannelBalanceQuery, GetInfoQuery, GetTransactionsQuery,
+    AddInvoiceMutation, CloseChannelSubscription, ConnectPeerMutation,
+    CreateLightningWalletMutation, DecodePayReqQuery, DisconnectPeerMutation,
+    GenSeedQuery, GetChannelBalanceQuery, GetInfoQuery, GetTransactionsQuery,
     GetWalletBalanceQuery, InitWalletMutation, InvoiceSubscription,
     ListChannelsQuery, ListPaymentsQuery, ListPeersQuery, NewAddressQuery,
     OpenChannelSubscription, SendPaymentMutation, StartDaemonMutation,
@@ -51,6 +51,6 @@ class LnMutations(graphene.ObjectType):
         description=StopDaemonMutation.description())
 
 
-class LnSubscriptions(InvoiceSubscription, OpenChannelSubscription,
-                      TransactionSubscription):
+class LnSubscriptions(CloseChannelSubscription, InvoiceSubscription,
+                      OpenChannelSubscription, TransactionSubscription):
     pass
