@@ -17,6 +17,7 @@ from .queries.get_transactions import GetTransactionsQuery
 from .queries.get_wallet_balance import GetWalletBalanceQuery
 from .queries.list_channels import ListChannelsQuery
 from .queries.list_payments import ListPaymentsQuery
+from .queries.list_invoices import ListInvoicesQuery
 from .queries.list_peers import ListPeersQuery
 from .queries.new_address import NewAddressQuery
 

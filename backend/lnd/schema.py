@@ -9,9 +9,9 @@ from backend.lnd.implementations import (
     CreateLightningWalletMutation, DecodePayReqQuery, DisconnectPeerMutation,
     GenSeedQuery, GetChannelBalanceQuery, GetInfoQuery, GetTransactionsQuery,
     GetWalletBalanceQuery, InitWalletMutation, InvoiceSubscription,
-    ListChannelsQuery, ListPaymentsQuery, ListPeersQuery, NewAddressQuery,
-    OpenChannelSubscription, SendPaymentMutation, StartDaemonMutation,
-    StopDaemonMutation, TransactionSubscription)
+    ListChannelsQuery, ListInvoicesQuery, ListPaymentsQuery, ListPeersQuery,
+    NewAddressQuery, OpenChannelSubscription, SendPaymentMutation,
+    StartDaemonMutation, StopDaemonMutation, TransactionSubscription)
 
 
 class Queries(
@@ -22,6 +22,7 @@ class Queries(
         GetTransactionsQuery,
         GetWalletBalanceQuery,
         ListChannelsQuery,
+        ListInvoicesQuery,
         ListPaymentsQuery,
         ListPeersQuery,
         NewAddressQuery,
