@@ -153,6 +153,11 @@ class LightningStub(object):
         request_serializer=rpc__pb2.SendCoinsRequest.SerializeToString,
         response_deserializer=rpc__pb2.SendCoinsResponse.FromString,
         )
+    self.ListUnspent = channel.unary_unary(
+        '/lnrpc.Lightning/ListUnspent',
+        request_serializer=rpc__pb2.ListUnspentRequest.SerializeToString,
+        response_deserializer=rpc__pb2.ListUnspentResponse.FromString,
+        )
     self.SubscribeTransactions = channel.unary_stream(
         '/lnrpc.Lightning/SubscribeTransactions',
         request_serializer=rpc__pb2.GetTransactionsRequest.SerializeToString,
@@ -166,11 +171,6 @@ class LightningStub(object):
     self.NewAddress = channel.unary_unary(
         '/lnrpc.Lightning/NewAddress',
         request_serializer=rpc__pb2.NewAddressRequest.SerializeToString,
-        response_deserializer=rpc__pb2.NewAddressResponse.FromString,
-        )
-    self.NewWitnessAddress = channel.unary_unary(
-        '/lnrpc.Lightning/NewWitnessAddress',
-        request_serializer=rpc__pb2.NewWitnessAddressRequest.SerializeToString,
         response_deserializer=rpc__pb2.NewAddressResponse.FromString,
         )
     self.SignMessage = channel.unary_unary(
@@ -394,6 +394,15 @@ class LightningServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def ListUnspent(self, request, context):
+    """* lncli: `listunspent`
+    ListUnspent returns a list of all utxos spendable by the wallet with a
+    number of confirmations between the specified minimum and maximum.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
   def SubscribeTransactions(self, request, context):
     """*
     SubscribeTransactions creates a uni-directional stream from the server to
@@ -418,14 +427,6 @@ class LightningServicer(object):
   def NewAddress(self, request, context):
     """* lncli: `newaddress`
     NewAddress creates a new address under control of the local wallet.
-    """
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def NewWitnessAddress(self, request, context):
-    """*
-    NewWitnessAddress creates a new witness address under control of the local wallet.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -649,7 +650,7 @@ class LightningServicer(object):
 
   def SubscribeInvoices(self, request, context):
     """*
-    SubscribeInvoices returns a uni-directional stream (sever -> client) for
+    SubscribeInvoices returns a uni-directional stream (server -> client) for
     notifying the client of newly added/settled invoices. The caller can
     optionally specify the add_index and/or the settle_index. If the add_index
     is specified, then we'll first start by sending add invoice events for all
@@ -834,6 +835,11 @@ def add_LightningServicer_to_server(servicer, server):
           request_deserializer=rpc__pb2.SendCoinsRequest.FromString,
           response_serializer=rpc__pb2.SendCoinsResponse.SerializeToString,
       ),
+      'ListUnspent': grpc.unary_unary_rpc_method_handler(
+          servicer.ListUnspent,
+          request_deserializer=rpc__pb2.ListUnspentRequest.FromString,
+          response_serializer=rpc__pb2.ListUnspentResponse.SerializeToString,
+      ),
       'SubscribeTransactions': grpc.unary_stream_rpc_method_handler(
           servicer.SubscribeTransactions,
           request_deserializer=rpc__pb2.GetTransactionsRequest.FromString,
@@ -847,11 +853,6 @@ def add_LightningServicer_to_server(servicer, server):
       'NewAddress': grpc.unary_unary_rpc_method_handler(
           servicer.NewAddress,
           request_deserializer=rpc__pb2.NewAddressRequest.FromString,
-          response_serializer=rpc__pb2.NewAddressResponse.SerializeToString,
-      ),
-      'NewWitnessAddress': grpc.unary_unary_rpc_method_handler(
-          servicer.NewWitnessAddress,
-          request_deserializer=rpc__pb2.NewWitnessAddressRequest.FromString,
           response_serializer=rpc__pb2.NewAddressResponse.SerializeToString,
       ),
       'SignMessage': grpc.unary_unary_rpc_method_handler(

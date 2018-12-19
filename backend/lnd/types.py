@@ -49,6 +49,8 @@ class LnInfoType(graphene.ObjectType):
     num_pending_channels = graphene.Int(
         description="Number of pending channels")
     num_active_channels = graphene.Int(description="Number of active channels")
+    num_inactive_channels = graphene.Int(
+        description="Number of inactive channels")
     num_peers = graphene.Int(description="Number of peers")
     block_height = graphene.Int(
         description="The node’s current view of the height of the best block")
