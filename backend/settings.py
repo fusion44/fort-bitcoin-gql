@@ -174,12 +174,24 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+if CONFIG["DEFAULT"]["database"] == "sqlite":
+    db = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
     }
+elif CONFIG["DEFAULT"]["database"] == "postgres":
+    db = {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": CONFIG["POSTGRES"]["postgres.name"],
+        "USER": CONFIG["POSTGRES"]["postgres.user"],
+        "PASSWORD": CONFIG["POSTGRES"]["postgres.password"],
+        "HOST": CONFIG["POSTGRES"]["postgres.host"],
+        "PORT": CONFIG["POSTGRES"]["postgres.port"],
 }
+else:
+    raise EnvironmentError("Database must be either sqlite or postgres")
+
+DATABASES = {'default': db}
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
