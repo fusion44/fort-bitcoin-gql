@@ -27,7 +27,11 @@ def update_wan_ip():
     if resp.status != 200:
         logger.exception("Status code not OK: {}".format(resp.status))
 
-    addr = IPAddress.objects.get(pk=1)  # type: IPAddress
-    addr.ip_address = resp.read().decode("utf-8")
+    try:
+        addr = IPAddress.objects.get(pk=1)  # type: IPAddress
+    except IPAddress.DoesNotExist:
+        addr = IPAddress()
+        addr.ip_address = resp.read().decode("utf-8")
+
     addr.save()
     logger.info("Updated ip: {}".format(addr.ip_address))
