@@ -4,7 +4,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
 
 import logging
-import urllib.request
+from urllib import request
 from urllib.error import HTTPError
 
 from backend.celery import app
@@ -19,19 +19,20 @@ def update_wan_ip():
     TODO: Check if ip is changed and notify all running LND instances
     """
     try:
-        resp = urllib.request.urlopen(
-            "https://api.ipify.org")  # type: HTTPResponse
+        resp = request.urlopen("https://api.ipify.org")  # type: HTTPResponse
     except HTTPError as error:
         logger.exception(error)
+        return
 
     if resp.status != 200:
         logger.exception("Status code not OK: {}".format(resp.status))
+        return
 
     try:
         addr = IPAddress.objects.get(pk=1)  # type: IPAddress
     except IPAddress.DoesNotExist:
         addr = IPAddress()
-        addr.ip_address = resp.read().decode("utf-8")
 
+    addr.ip_address = resp.read().decode("utf-8")
     addr.save()
     logger.info("Updated ip: {}".format(addr.ip_address))
