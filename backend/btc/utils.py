@@ -35,6 +35,6 @@ def make_rpc_auth_url(testnet=False):
 
     url = "{}://{}:{}@{}:{}".format(
         http_type, config["btc_rpc_username"], config["btc_rpc_password"],
-        config["btc_rpc_ip"], config["btc_rpc_port"])
+        config["btc_rpc_host"], config["btc_rpc_port"])
 
     return AuthServiceProxy(url)

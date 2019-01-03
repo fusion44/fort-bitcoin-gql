@@ -25,8 +25,8 @@ btc_rpc_username=your_username
 # RPC password     
 btc_rpc_password=your_password
 
-# IP address of the node
-btc_rpc_ip=127.0.0.1
+# Host address of the node
+btc_rpc_host=127.0.0.1
 
 # Port of the node
 btc_rpc_port=8332
@@ -41,8 +41,8 @@ btc_rpc_username=your_username
 # RPC password
 btc_rpc_password=your_password
 
-# IP address of the node
-btc_rpc_ip=127.0.0.1
+# Host address of the node
+btc_rpc_host=127.0.0.1
 
 # Port of the node
 btc_rpc_port=18332
