@@ -15,7 +15,7 @@ from backend.error_responses import ServerError, Unauthenticated
 from backend.lnd.models import LNDWallet
 from backend.lnd.types import LnInfoType
 from backend.lnd.utils import (build_grpc_channel_manual,
-                               build_lnd_wallet_config,
+                               build_lnd_startup_args, build_lnd_wallet_config,
                                lnd_instance_is_running)
 
 
@@ -59,9 +59,14 @@ class StartDaemonMutation(graphene.Mutation):
         )
 
         recovery_window = graphene.Int(
+            default_value=0,
             description=
             "recovery_window is an optional argument specifying the address lookahead when restoring a wallet seed. The recovery window applies to each invdividual branch of the BIP44 derivation paths. Supplying a recovery window of zero indicates that no addresses should be recovered, such after the first initialization of the wallet."
         )
+
+        autopilot = graphene.Boolean(
+            default_value=False,
+            description="Whether the autopilot feature should be used.")
 
     Output = StartDaemonPayload
 
@@ -70,7 +75,8 @@ class StartDaemonMutation(graphene.Mutation):
         """Returns the description for this mutation."""
         return "Starts the LND daemon and unlocks the wallet"
 
-    def mutate(self, info, wallet_password: str, recovery_window: int = 0):
+    def mutate(self, info, autopilot: bool, wallet_password: str,
+               recovery_window: int):
         """Starts the LND process and unlocks the wallet if user provides the password"""
 
         if not info.context.user.is_authenticated:
@@ -85,11 +91,13 @@ class StartDaemonMutation(graphene.Mutation):
 
         return start_daemon_mutation(
             wallet,
+            autopilot,
             wallet_password,
         )
 
 
 def start_daemon_mutation(wallet: LNDWallet,
+                          autopilot: bool,
                           wallet_password: str,
                           recovery_window: int = 0) -> LnInfoType:
     cfg = build_lnd_wallet_config(wallet.pk)
@@ -98,38 +106,12 @@ def start_daemon_mutation(wallet: LNDWallet,
         return StartDaemonInstanceIsAlreadyRunning()
 
     try:
-        network = "--bitcoin.testnet" if wallet.testnet else "--bitcoin.mainnet"
-
-        cfg = build_lnd_wallet_config(wallet.pk)
-
-        lnd_args = [
-            "nohup",
-            "lnd",
-            "--alias={}".format(wallet.public_alias),
-            "--datadir={}".format(cfg.data_dir),
-            "--tlscertpath={}".format(cfg.tls_cert_path),
-            "--tlskeypath={}".format(cfg.tls_key_path),
-            "--adminmacaroonpath={}".format(cfg.admin_macaroon_path),
-            "--readonlymacaroonpath={}".format(cfg.read_only_macaroon_path),
-            "--logdir={}".format(cfg.log_dir),
-            "--listen=0.0.0.0:{}".format(cfg.listen_port_ipv4),
-            "--listen=[::1]:{}".format(cfg.listen_port_ipv6),
-            "--rpclisten=localhost:{}".format(cfg.rpc_listen_port_ipv4),
-            "--rpclisten=[::1]:{}".format(cfg.rpc_listen_port_ipv4),
-            "--restlisten=localhost:{}".format(cfg.rest_port_ipv4),
-            "--restlisten=[::1]:{}".format(cfg.rest_port_ipv6),
-            "--bitcoin.active",
-            network,
-            "--bitcoin.node=btcd",
-            "--btcd.rpchost=localhost",
-            "--autopilot.active",
-            "--autopilot.maxchannels=5",
-            "--autopilot.allocation=0.6",
-        ]
-
+        args = build_lnd_startup_args(autopilot, wallet)
         # Start LND instance
         subprocess.Popen(
-            lnd_args, cwd=r'{}'.format(cfg.data_dir), preexec_fn=os.setpgrp)
+            args["args"],
+            cwd=r'{}'.format(args["data_dir"]),
+            preexec_fn=os.setpgrp)
 
         time.sleep(2)
     except grpc.RpcError as exc:

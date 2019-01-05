@@ -92,9 +92,6 @@ def build_lnd_wallet_config(pk) -> LNDWalletConfig:
     """
     path = os.path.join(CONFIG["DEFAULT"]["lnd_data_path"], str(pk))
 
-    if not os.path.exists(path):
-        os.makedirs(path)
-
     default_listen_port = 19739
     default_rpc_port = 12009
     default_rest_port = 8079
@@ -112,6 +109,55 @@ def build_lnd_wallet_config(pk) -> LNDWalletConfig:
         rpc_listen_port_ipv4=default_rpc_port + pk * 2 - 1,
         rest_port_ipv6=default_rest_port + pk * 2,
         rest_port_ipv4=default_rest_port + pk * 2 - 1)
+
+
+def build_lnd_startup_args(autopilot: bool, wallet):
+    node = CONFIG["DEFAULT"]["bitcoin_node"]
+    network = "--bitcoin.testnet" if wallet.testnet else "--bitcoin.mainnet"
+
+    cfg = build_lnd_wallet_config(wallet.pk)
+
+    lnd_args = [
+        "nohup",
+        "lnd",
+        "--alias={}".format(wallet.public_alias),
+        "--datadir={}".format(cfg.data_dir),
+        "--tlscertpath={}".format(cfg.tls_cert_path),
+        "--tlskeypath={}".format(cfg.tls_key_path),
+        "--adminmacaroonpath={}".format(cfg.admin_macaroon_path),
+        "--readonlymacaroonpath={}".format(cfg.read_only_macaroon_path),
+        "--logdir={}".format(cfg.log_dir),
+        "--listen=0.0.0.0:{}".format(cfg.listen_port_ipv4),
+        "--listen=[::1]:{}".format(cfg.listen_port_ipv6),
+        "--rpclisten=localhost:{}".format(cfg.rpc_listen_port_ipv4),
+        "--rpclisten=[::1]:{}".format(cfg.rpc_listen_port_ipv4),
+        "--restlisten=localhost:{}".format(cfg.rest_port_ipv4),
+        "--restlisten=[::1]:{}".format(cfg.rest_port_ipv6),
+        "--bitcoin.active",
+        network,
+    ]
+
+    if node == "btcd":
+        lnd_args.extend([
+            "--bitcoin.node=btcd",
+            "--btcd.rpchost=localhost",
+        ])
+    elif node == "bitcoind":
+        lnd_args.extend([
+            "--bitcoin.node=bitcoind",
+            "--bitcoind.rpchost=localhost",
+        ])
+    else:
+        raise ValueError("Node should either be 'bitcoind' or 'btcd'")
+
+    if autopilot:
+        lnd_args.extend([
+            "--autopilot.active",
+            "--autopilot.maxchannels=5",
+            "--autopilot.allocation=0.6",
+        ])
+
+    return {"args": lnd_args, "data_dir": cfg.data_dir}
 
 
 def lnd_instance_is_running(cfg: LNDWalletConfig) -> bool:

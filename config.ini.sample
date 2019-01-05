@@ -5,6 +5,8 @@ LND_DATA_PATH = 'path_to_LND_instance_data'
 celery_broker_url = amqp://localhost//
 # sqlite or postgres
 database=sqlite
+# btcd or bitcoind
+bitcoin_node=bitcoind
 
 # The [POSTGRES] section only necessary if postgres 
 # is set as the database
