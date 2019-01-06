@@ -37,14 +37,14 @@ def test_start_daemon(monkeypatch: MonkeyPatch):
     wallet_password = "secure_pw"
 
     mut = StartDaemonMutation()
-    ret = mut.mutate(resolve_info, wallet_password)
+    ret = mut.mutate(resolve_info, False, wallet_password, 0)
 
     assert isinstance(
         ret, Unauthenticated), "Should be an instance of Unauthenticated"
 
     # "login" a user
     req.user = mixer.blend("auth.User")
-    ret = mut.mutate(resolve_info, wallet_password)
+    ret = mut.mutate(resolve_info, False, wallet_password, 0)
 
     # create a wallet by another user
     # the the logged in user doesn't have a wallet yet
@@ -60,7 +60,7 @@ def test_start_daemon(monkeypatch: MonkeyPatch):
     monkeypatch.setattr(backend.lnd.implementations.mutations.start_daemon,
                         "lnd_instance_is_running", lambda cfg: True)
 
-    ret = mut.mutate(resolve_info, wallet_password)
+    ret = mut.mutate(resolve_info, False, wallet_password, 0)
 
     assert isinstance(ret, StartDaemonInstanceIsAlreadyRunning
                       ), "Should throw a StartDaemonInstanceIsAlreadyRunning"
