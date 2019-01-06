@@ -10,9 +10,9 @@ from backend.error_responses import (ServerError, Unauthenticated,
                                      WalletInstanceNotFound,
                                      WalletInstanceNotRunning)
 from backend.lnd.models import LNDWallet
-from backend.lnd.types import LnListPaymentsResponse
+from backend.lnd.types import LnPayment
 from backend.lnd.utils import (build_grpc_channel_manual,
-                               build_lnd_wallet_config)
+                               build_lnd_wallet_config, process_lnd_doc_string)
 
 
 class ListPaymentsError(graphene.ObjectType):
@@ -20,7 +20,27 @@ class ListPaymentsError(graphene.ObjectType):
 
 
 class ListPaymentsSuccess(graphene.ObjectType):
-    ln_transaction_details = graphene.Field(LnListPaymentsResponse)
+    def __init__(self, first_index_offset, last_index_offset, payments):
+        super().__init__()
+        self.payments = []
+        self.first_index_offset = first_index_offset
+        self.last_index_offset = last_index_offset
+        for payment in payments:
+            self.payments.append(LnPayment(payment))
+
+    payments = graphene.List(
+        LnPayment,
+        description=
+        "A list of payments from the time slice of the time series specified in the request."
+    )
+    last_index_offset = graphene.Int(
+        description=
+        "The index of the last item in the set of returned payments. This can be used to seek further, pagination style."
+    )
+    first_index_offset = graphene.Int(
+        description=
+        "The index of the last item in the set of returned payments. This can be used to seek backwards, pagination style."
+    )
 
 
 class ListPaymentsResponse(graphene.Union):
@@ -33,10 +53,34 @@ class ListPaymentsResponse(graphene.Union):
 class ListPaymentsQuery(graphene.ObjectType):
     ln_list_payments = graphene.Field(
         ListPaymentsResponse,
-        description="ListPayments returns a list of all outgoing payments.")
+        description=process_lnd_doc_string(
+            lnrpc.LightningServicer.ListPayments.__doc__),
+        index_offset=graphene.Int(
+            default_value=0,
+            description=
+            "The index of an invoice that will be used as either the start or end of a query to determine which invoices should be returned in the response."
+        ),
+        num_max_payments=graphene.Int(
+            default_value=100,
+            description=
+            "The max number of payments to return in the response to this query."
+        ),
+        reverse=graphene.Boolean(
+            default_value=True,
+            description=
+            "If set, the payments returned will result from seeking backwards from the specified index offset. This can be used to paginate backwards."
+        ),
+    )
 
-    def resolve_ln_list_payments(self, info, **kwargs):
-        """https://api.lightning.community/?python#listpayments"""
+    def resolve_ln_list_payments(self, info, index_offset, num_max_payments,
+                                 reverse):
+        """https://api.lightning.community/?python#listpayments
+        
+        LND does not have paging in this call yet. Every gRPC
+        call will always return the complete payments dataset.
+        The paging functionality is implemented on top of the
+        full dataset we get from the LND daemon.
+        """
 
         if not info.context.user.is_authenticated:
             return Unauthenticated()
@@ -73,4 +117,14 @@ class ListPaymentsQuery(graphene.ObjectType):
                 preserving_proto_field_name=True,
                 including_default_value_fields=True,
             ))
-        return ListPaymentsSuccess(LnListPaymentsResponse(json_data))
+
+        if reverse:
+            # reverse the list
+            rev = json_data["payments"][::-1]
+            payments = rev[index_offset:index_offset + num_max_payments]
+        else:
+            payments = json_data["payments"][index_offset:index_offset +
+                                             num_max_payments]
+
+        return ListPaymentsSuccess(index_offset,
+                                   index_offset + num_max_payments, payments)
