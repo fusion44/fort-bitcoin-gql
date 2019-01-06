@@ -15,31 +15,6 @@ from backend.lnd.utils import (build_grpc_channel_manual,
                                build_lnd_wallet_config, process_lnd_doc_string)
 
 
-class LnListInvoicesResponse(graphene.ObjectType):
-    """https://api.lightning.community/?python#listinvoiceresponse"""
-
-    def __init__(self, data: dict):
-        super().__init__()
-        self.invoices = []
-        if "invoices" in data:
-            for invoice in data["invoices"]:
-                self.invoices.append(LnInvoice(invoice))
-
-    invoices = graphene.List(
-        LnInvoice,
-        description=
-        "A list of invoices from the time slice of the time series specified in the request."
-    )
-    last_index_offset = graphene.Int(
-        description=
-        "The index of the last item in the set of returned invoices. This can be used to seek further, pagination style."
-    )
-    first_index_offset = graphene.Int(
-        description=
-        "The index of the last item in the set of returned invoices. This can be used to seek backwards, pagination style."
-    )
-
-
 class ListInvoicesError(graphene.ObjectType):
     error_message = graphene.String()
 
@@ -67,7 +42,6 @@ class ListInvoicesSuccess(graphene.ObjectType):
         description=
         "The index of the last item in the set of returned invoices. This can be used to seek backwards, pagination style."
     )
-    
 
 
 class ListInvoicesResponse(graphene.Union):
