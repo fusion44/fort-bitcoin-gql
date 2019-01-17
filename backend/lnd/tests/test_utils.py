@@ -5,13 +5,17 @@ import pytest
 from mixer.backend.django import mixer
 
 import backend.lnd.utils as utils
-from backend.lnd.models import LNDWallet
+from backend.lnd.models import LNDWallet, IPAddress
 from backend.test_utils.utils import fake_lnd_wallet_config, raise_error
 
 pytestmark = pytest.mark.django_db
 
 
 def test_lnd_startup_args(monkeypatch):
+    address = IPAddress()
+    address.ip_address = "1.1.1.1"
+    address.save()
+
     wallet = LNDWallet()
     wallet.testnet = True
     wallet.initialized = True
@@ -57,6 +61,9 @@ def test_lnd_startup_args(monkeypatch):
         "args"], "Should contain the autopilot args"
     assert "--bitcoin.mainnet" in args[
         "args"], "Should contain the bitcoin mainnet argument"
+    assert "--externalip={}:19740".format(
+        address.ip_address) in args["args"], (
+            "Should contain the external ip address")
 
 
 def test_lnd_instance_is_running(monkeypatch):

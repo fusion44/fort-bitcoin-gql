@@ -13,6 +13,7 @@ import grpc
 import psutil
 
 from backend.error_responses import ServerError, WalletInstanceNotRunning
+from backend.lnd.models import IPAddress
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read("config.ini")
@@ -117,6 +118,8 @@ def build_lnd_startup_args(autopilot: bool, wallet):
 
     cfg = build_lnd_wallet_config(wallet.pk)
 
+    ip = IPAddress.objects.get(pk=1)
+
     lnd_args = [
         "nohup",
         "lnd",
@@ -134,6 +137,7 @@ def build_lnd_startup_args(autopilot: bool, wallet):
         "--restlisten=localhost:{}".format(cfg.rest_port_ipv4),
         "--restlisten=[::1]:{}".format(cfg.rest_port_ipv6),
         "--bitcoin.active",
+        "--externalip={}:{}".format(ip.ip_address, cfg.listen_port_ipv4),
         network,
     ]
 
