@@ -7,11 +7,12 @@ import graphene
 from backend.lnd.implementations import (
     AddInvoiceMutation, CloseChannelSubscription, ConnectPeerMutation,
     CreateLightningWalletMutation, DecodePayReqQuery, DisconnectPeerMutation,
-    GenSeedQuery, GetChannelBalanceQuery, GetInfoQuery, GetTransactionsQuery,
-    GetWalletBalanceQuery, InitWalletMutation, InvoiceSubscription,
-    ListChannelsQuery, ListInvoicesQuery, ListPaymentsQuery, ListPeersQuery,
-    NewAddressQuery, OpenChannelSubscription, SendPaymentMutation,
-    StartDaemonMutation, StopDaemonMutation, TransactionSubscription)
+    GenSeedQuery, GetChannelBalanceQuery, GetInfoQuery, GetLnWalletStatusQuery,
+    GetTransactionsQuery, GetWalletBalanceQuery, InitWalletMutation,
+    InvoiceSubscription, ListChannelsQuery, ListInvoicesQuery,
+    ListPaymentsQuery, ListPeersQuery, NewAddressQuery,
+    OpenChannelSubscription, SendPaymentMutation, StartDaemonMutation,
+    StopDaemonMutation, TransactionSubscription)
 
 
 class Queries(
@@ -19,6 +20,7 @@ class Queries(
         GenSeedQuery,
         GetChannelBalanceQuery,
         GetInfoQuery,
+        GetLnWalletStatusQuery,
         GetTransactionsQuery,
         GetWalletBalanceQuery,
         ListChannelsQuery,

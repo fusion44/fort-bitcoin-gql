@@ -6,7 +6,7 @@ import grpc
 import pytest
 from graphql.execution.base import ResolveInfo
 
-from backend.lnd.utils import LNDWalletConfig
+from backend.lnd.utils import (LNDWalletConfig, ChannelData)
 
 pytestmark = pytest.mark.django_db
 
@@ -19,14 +19,6 @@ def mock_resolve_info(req) -> ResolveInfo:
 def raise_error(err):
     """Raises the given error. Useful for mocking
     functions that raise exceptions using lambdas"""
-    raise err
-
-
-def fake_build_channel_gRPC_err(rpc_server, rpc_port, cert_path,
-                                macaroon_path):
-    err = grpc.RpcError()
-    err.code = 1337
-    err.details = "Failed building the channel"
     raise err
 
 
@@ -44,3 +36,10 @@ def fake_lnd_wallet_config():
         rpc_listen_port_ipv6="",
         rest_port_ipv4="",
         rest_port_ipv6="")
+
+
+def fake_build_grpc_channel_manual(error=None):
+    """Returns a fake ChannelData object"""
+    if error:
+        return ChannelData(channel=None, macaroon=None, error=error)
+    return ChannelData(channel=object(), macaroon=b"", error=None)
