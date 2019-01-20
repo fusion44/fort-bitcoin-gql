@@ -2,18 +2,18 @@ aiogrpc==1.5
 celery==4.2.1
 coverage==4.5.2
 channels==2.1.6
-Django==2.1.4
+Django==2.1.5
 django-celery-beat==1.4.0
 django-cors-headers==2.4.0
-djangorestframework==3.9.0
+djangorestframework==3.9.1
 djangorestframework-jwt==1.11.0
 graphene-django==2.2.0
 graphql-ws==0.3.0
 grpcio-tools==1.17.1
 googleapis-common-protos==1.5.5
 pylint-django==2.0.5
-pytest-cov==2.6.0
-pytest-django==3.4.4
+pytest-cov==2.6.1
+pytest-django==3.4.5
 python-bitcoinrpc==1.0
 psutil==5.4.8
 psycopg2==2.7.6.1 --no-binary psycopg2
