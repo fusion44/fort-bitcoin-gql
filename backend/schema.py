@@ -18,7 +18,8 @@ class Configuration(graphene.ObjectType):
 
 
 class Query(backend.btc.schema_node.Query, backend.lnd.schema.Queries,
-            backend.stats.schema.Query, graphene.ObjectType):
+            backend.stats.schema.Query, backend.user_profile.schema.Query,
+            graphene.ObjectType):
     # This class will inherit from multiple Queries
     # as we begin to add more apps to our project
     get_configuration = graphene.Field(

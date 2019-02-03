@@ -4,9 +4,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
 
 import pytest
-from mixer.backend.django import mixer
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
+from mixer.backend.django import mixer
+
+from backend.error_responses import Unauthenticated
+from backend.test_utils.utils import mock_resolve_info
 
 from .. import schema
 
@@ -16,17 +19,20 @@ pytestmark = pytest.mark.django_db
 
 def test_user_type():
     instance = schema.UserType()
-    assert instance, "Should instanciate a UserType object"
+    assert instance, "Should instantiate a UserType object"
 
 
-def test_resolve_current_user():
-    q = schema.Query()
+def test_resolve_get_current_user():
     req = RequestFactory().get("/")
     req.user = AnonymousUser()
-    res = q.resolve_current_user(req)
-    assert res is None, "Should return None if user is not authenticated"
+    resolve_info = mock_resolve_info(req)
+
+    q = schema.Query()
+    ret = q.resolve_get_current_user(resolve_info)
+    assert isinstance(
+        ret, Unauthenticated), "Should be an instance of Unauthenticated"
 
     user = mixer.blend("auth.User")
     req.user = user
-    res = q.resolve_current_user(req)
-    assert res == user, "Should return the current user if authenticated"
+    ret = q.resolve_get_current_user(resolve_info)
+    assert ret.user == user, "Should return the current user if authenticated"
