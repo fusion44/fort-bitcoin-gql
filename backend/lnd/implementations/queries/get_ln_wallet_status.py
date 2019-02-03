@@ -35,7 +35,7 @@ class GetLnWalletStatusOperational(graphene.ObjectType):
     info = graphene.String(default_value="running_normally")
 
 
-class GetLnWalletStausResponse(graphene.Union):
+class GetLnWalletStatusResponse(graphene.Union):
     class Meta:
         types = (Unauthenticated, ServerError, GetLnWalletStatusError,
                  WalletInstanceNotFound, WalletInstanceNotRunning,
@@ -45,7 +45,7 @@ class GetLnWalletStausResponse(graphene.Union):
 
 class GetLnWalletStatusQuery(graphene.ObjectType):
     get_ln_wallet_status = graphene.Field(
-        GetLnWalletStausResponse,
+        GetLnWalletStatusResponse,
         description="GetWalletStatus returns the current state of the wallet",
     )
 

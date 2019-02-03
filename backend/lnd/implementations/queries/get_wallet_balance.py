@@ -26,7 +26,8 @@ class GetWalletBalanceSuccess(graphene.ObjectType):
 class GetWalletBalanceResponse(graphene.Union):
     class Meta:
         types = (Unauthenticated, ServerError, GetWalletBalanceError,
-                 WalletInstanceNotRunning, GetWalletBalanceSuccess)
+                 WalletInstanceNotFound, WalletInstanceNotRunning,
+                 GetWalletBalanceSuccess)
 
 
 class GetWalletBalanceQuery(graphene.ObjectType):
