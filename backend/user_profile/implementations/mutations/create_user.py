@@ -88,6 +88,7 @@ class CreateUserMutation(graphene.Mutation):
             print(exc)
             return CreateUserMutation(
                 create_user=CreateUserError(
-                    error_type=USERNAME_NOT_UNIQUE, error_message=str(exc)))
+                    error_type=USERNAME_NOT_UNIQUE,
+                    error_message="Username is taken"))
 
         return CreateUserMutation(create_user=CreateUserSuccess(user))
