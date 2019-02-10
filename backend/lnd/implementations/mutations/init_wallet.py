@@ -6,19 +6,18 @@ import time
 import graphene
 import grpc
 from django.db.models import QuerySet
-from google.protobuf.json_format import MessageToJson
 
 import backend.lnd.rpc_pb2 as ln
 import backend.lnd.rpc_pb2_grpc as lnrpc
 from backend.error_responses import ServerError, Unauthenticated
 from backend.lnd.models import LNDWallet
-from backend.lnd.types import LnInfoType
 from backend.lnd.utils import (build_grpc_channel_manual,
                                build_lnd_wallet_config, process_lnd_doc_string)
 
 
 class InitWalletSuccess(graphene.ObjectType):
-    info = graphene.Field(LnInfoType)
+    status = graphene.Boolean(
+        default_value=True, description="True if successful")
 
 
 class InitWalletInstanceNotFound(graphene.ObjectType):
@@ -118,7 +117,7 @@ class InitWalletMutation(graphene.Mutation):
 
 def init_wallet_mutation(wallet: LNDWallet, wallet_password: str,
                          cipher_seed_mnemonic: [], aezeed_passphrase: str,
-                         recovery_window: int) -> LnInfoType:
+                         recovery_window: int):
     cfg = build_lnd_wallet_config(wallet.pk)
 
     channel_data = build_grpc_channel_manual(
@@ -156,28 +155,4 @@ def init_wallet_mutation(wallet: LNDWallet, wallet_password: str,
         print(exc)
         return ServerError.generic_rpc_error(exc.code(), exc.details())
 
-    # Need to rebuild channel data because the macaroons
-    # are only generated upon wallet initialization
-    channel_data = build_grpc_channel_manual(
-        rpc_server="127.0.0.1",
-        rpc_port=cfg.rpc_listen_port_ipv4,
-        cert_path=cfg.tls_cert_path,
-        macaroon_path=cfg.admin_macaroon_path)
-
-    stub = lnrpc.LightningStub(channel_data.channel)
-    request = ln.GetInfoRequest()
-
-    try:
-        response = stub.GetInfo(
-            request, metadata=[('macaroon', channel_data.macaroon)])
-    except grpc.RpcError as exc:
-        print(exc)
-        return ServerError.generic_rpc_error(exc.code, exc.details)  # pylint: disable=E1101
-
-    json_data = json.loads(
-        MessageToJson(
-            response,
-            preserving_proto_field_name=True,
-            including_default_value_fields=True,
-        ))
-    return InitWalletSuccess(info=LnInfoType(json_data))
+    return InitWalletSuccess(status="OK")

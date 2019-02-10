@@ -36,6 +36,20 @@ LNDWalletConfig = collections.namedtuple('LNDWalletConfig', [
     "rest_port_ipv6",
 ])
 
+BTCNodeConfig = collections.namedtuple(
+    'BTCNodeConfig',
+    [
+        "bitcoin_node",  # btcd and bitcoind
+        "network",  # btcd and bitcoind
+        "rpc_username",  # btcd and bitcoind
+        "rpc_password",  # btcd and bitcoind
+        "rpc_host",  # btcd and bitcoind
+        "rpc_port",  # btcd and bitcoind
+        "bitcoind_rpc_use_https",  # bitcoind only
+        "bitcoind_zmqpubrawblock",  # bitcoind only
+        "bitcoind_zmqpubrawtx",  # bitcoind only
+    ])
+
 
 def build_grpc_channel_manual(rpc_server,
                               rpc_port,
@@ -141,15 +155,26 @@ def build_lnd_startup_args(autopilot: bool, wallet):
         network,
     ]
 
+    node_cfg = get_node_config()
+
     if node == "btcd":
         lnd_args.extend([
             "--bitcoin.node=btcd",
-            "--btcd.rpchost=localhost",
+            "--btcd.rpchost={}:{}".format(node_cfg.rpc_host,
+                                          node_cfg.rpc_port),
+            "--btcd.rpcuser={}".format(node_cfg.rpc_username),
+            "--btcd.rpcpass={}".format(node_cfg.rpc_password),
         ])
     elif node == "bitcoind":
         lnd_args.extend([
             "--bitcoin.node=bitcoind",
-            "--bitcoind.rpchost=localhost",
+            "--bitcoind.rpchost={}:{}".format(node_cfg.rpc_host,
+                                              node_cfg.rpc_port),
+            "--bitcoind.rpcuser={}".format(node_cfg.rpc_username),
+            "--bitcoind.rpcpass={}".format(node_cfg.rpc_password),
+            "--bitcoind.zmqpubrawblock={}".format(
+                node_cfg.bitcoind_zmqpubrawblock),
+            "--bitcoind.zmqpubrawtx={}".format(node_cfg.bitcoind_zmqpubrawtx),
         ])
     else:
         raise ValueError("Node should either be 'bitcoind' or 'btcd'")
@@ -192,3 +217,57 @@ def process_lnd_doc_string(doc: str):
         if line and not line.startswith("*"):
             new_doc_string += line + " "
     return new_doc_string
+
+
+def get_node_config():
+    bitcoin_node = CONFIG["DEFAULT"]["bitcoin_node"]  # btcd and bitcoind
+    network = CONFIG["DEFAULT"]["network"]
+    rpc_username = ""
+    rpc_password = ""
+    rpc_host = ""
+    rpc_port = ""
+    bitcoind_rpc_use_https = ""
+    bitcoind_zmqpubrawblock = ""
+    bitcoind_zmqpubrawtx = ""
+
+    node_cfg = None
+    if network == "testnet":
+        if bitcoin_node == "btcd":
+            node_cfg = CONFIG["BTCD_TESTNET"]
+        elif bitcoin_node == "bitcoind":
+            node_cfg = CONFIG["BITCOIND_TESTNET"]
+        else:
+            raise ValueError("Node should either be 'bitcoind' or 'btcd'")
+    elif network == "mainnet":
+        if bitcoin_node == "btcd":
+            node_cfg = CONFIG["BTCD_MAINNET"]
+        elif bitcoin_node == "bitcoind":
+            node_cfg = CONFIG["BITCOIND_MAINNET"]
+        else:
+            raise ValueError("Node should either be 'bitcoind' or 'btcd'")
+    else:
+        raise ValueError("Network should either be 'testnet' or 'mainnet'")
+
+    # applicable for both nodes
+    rpc_username = node_cfg["btc_rpc_username"]
+    rpc_password = node_cfg["btc_rpc_password"]
+    rpc_host = node_cfg["btc_rpc_host"]
+    rpc_port = node_cfg["btc_rpc_port"]
+
+    # Bitcoind only
+    if bitcoin_node == "bitcoind":
+        bitcoind_rpc_use_https = node_cfg["btc_rpc_use_https"]
+        bitcoind_zmqpubrawblock = node_cfg["btc_zmqpubrawblock"]
+        bitcoind_zmqpubrawtx = node_cfg["btc_zmqpubrawtx"]
+
+    return BTCNodeConfig(
+        bitcoin_node=bitcoin_node,
+        network=network,
+        rpc_username=rpc_username,
+        rpc_password=rpc_password,
+        rpc_host=rpc_host,
+        rpc_port=rpc_port,
+        bitcoind_rpc_use_https=bitcoind_rpc_use_https,
+        bitcoind_zmqpubrawblock=bitcoind_zmqpubrawblock,
+        bitcoind_zmqpubrawtx=bitcoind_zmqpubrawtx,
+    )

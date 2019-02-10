@@ -33,6 +33,12 @@ btc_rpc_host=127.0.0.1
 # Port of the node
 btc_rpc_port=8332
 
+# Raw Block ZeroMQ notification address
+btc_zmqpubrawblock=<address>
+
+# Raw Tx ZeroMQ notification address
+btc_zmqpubrawtx=<address>
+
 [BITCOIND_TESTNET]
 # Boolean: True, False
 btc_rpc_use_https=false
@@ -48,6 +54,39 @@ btc_rpc_host=127.0.0.1
 
 # Port of the node
 btc_rpc_port=18332
+
+# Raw Block ZeroMQ notification address
+btc_zmqpubrawblock=<address>
+
+# Raw Tx ZeroMQ notification address
+btc_zmqpubrawtx=<address>
+
+[BTCD_MAINNET]
+# RPC username
+btc_rpc_username=your_username
+
+# RPC password
+btc_rpc_password=your_password
+
+# Host address of the node
+btc_rpc_host=127.0.0.1
+
+# Port of the node
+btc_rpc_port=18332
+
+[BTCD_TESTNET]
+# RPC username
+btc_rpc_username=your_username
+
+# RPC password
+btc_rpc_password=your_password
+
+# Host address of the node
+btc_rpc_host=127.0.0.1
+
+# Port of the node
+btc_rpc_port=18332
+
 
 [LND_MAINNET]
 # IP address of the node

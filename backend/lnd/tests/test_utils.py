@@ -24,15 +24,43 @@ def test_lnd_startup_args(monkeypatch):
 
     config = {
         "DEFAULT": {
+            "bitcoin_node": "btcd",
+            "network": "mainnet",
             "lnd_data_path": "/test/1234",
-            "bitcoin_node": "wrong",
+        },
+        "BTCD_MAINNET": {
+            "btc_rpc_username": "btcdmainnet",
+            "btc_rpc_password": "123",
+            "btc_rpc_host": "0.0.0.0",
+            "btc_rpc_port": "0000",
+        },
+        "BTCD_TESTNET": {
+            "btc_rpc_username": "btcdtestnet",
+            "btc_rpc_password": "234",
+            "btc_rpc_host": "1.1.1.1",
+            "btc_rpc_port": "1111",
+        },
+        "BITCOIND_MAINNET": {
+            "btc_rpc_use_https": "false",
+            "btc_rpc_username": "bitcoindmainnet",
+            "btc_rpc_password": "345",
+            "btc_rpc_host": "2.2.2.2",
+            "btc_rpc_port": "2222",
+            "btc_zmqpubrawblock": "tcp://127.0.0.1:39000main",
+            "btc_zmqpubrawtx": "tcp://127.0.0.1:39000main",
+        },
+        "BITCOIND_TESTNET": {
+            "btc_rpc_use_https": "false",
+            "btc_rpc_username": "bitcoindtestnet",
+            "btc_rpc_password": "456",
+            "btc_rpc_host": "3.3.3.3",
+            "btc_rpc_port": "3333",
+            "btc_zmqpubrawblock": "tcp://127.0.0.1:39000test",
+            "btc_zmqpubrawtx": "tcp://127.0.0.1:39000test",
         },
     }
 
     monkeypatch.setattr(utils, "CONFIG", config)
-
-    with pytest.raises(ValueError):
-        args = utils.build_lnd_startup_args(False, wallet)
 
     config["DEFAULT"]["bitcoin_node"] = "btcd"
     monkeypatch.setattr(utils, "CONFIG", config)
@@ -96,3 +124,98 @@ def test_lnd_instance_is_running(monkeypatch):
 
     with pytest.raises(RuntimeError):
         ret = utils.lnd_instance_is_running(cfg)
+
+
+def test_get_node_config(monkeypatch):
+    config = {
+        "DEFAULT": {
+            "bitcoin_node": "btcd_fail",
+            "network": "mainnet_fail",
+            "lnd_data_path": "/test/1234",
+        },
+        "BTCD_MAINNET": {
+            "btc_rpc_username": "btcdmainnet",
+            "btc_rpc_password": "123",
+            "btc_rpc_host": "0.0.0.0",
+            "btc_rpc_port": "0000",
+        },
+        "BTCD_TESTNET": {
+            "btc_rpc_username": "btcdtestnet",
+            "btc_rpc_password": "234",
+            "btc_rpc_host": "1.1.1.1",
+            "btc_rpc_port": "1111",
+        },
+        "BITCOIND_MAINNET": {
+            "btc_rpc_use_https": "false",
+            "btc_rpc_username": "bitcoindmainnet",
+            "btc_rpc_password": "345",
+            "btc_rpc_host": "2.2.2.2",
+            "btc_rpc_port": "2222",
+            "btc_zmqpubrawblock": "tcp://127.0.0.1:39000main",
+            "btc_zmqpubrawtx": "tcp://127.0.0.1:39000main",
+        },
+        "BITCOIND_TESTNET": {
+            "btc_rpc_use_https": "false",
+            "btc_rpc_username": "bitcoindtestnet",
+            "btc_rpc_password": "456",
+            "btc_rpc_host": "3.3.3.3",
+            "btc_rpc_port": "3333",
+            "btc_zmqpubrawblock": "tcp://127.0.0.1:39000test",
+            "btc_zmqpubrawtx": "tcp://127.0.0.1:39000test",
+        },
+    }
+
+    monkeypatch.setattr(utils, "CONFIG", config)
+
+    with pytest.raises(ValueError):
+        utils.get_node_config()
+    config["DEFAULT"]["network"] = "mainnet"
+
+    with pytest.raises(ValueError):
+        utils.get_node_config()
+    config["DEFAULT"]["bitcoin_node"] = "btcd"
+
+    # test mainnet with btcd
+    cfg = utils.get_node_config()
+    assert cfg.bitcoin_node == "btcd", "Node should be btcd"
+    assert cfg.network == "mainnet", "Network should be mainnet"
+    assert cfg.rpc_username == "btcdmainnet", "Mainnet btcd username should be btcdmainnet"
+    assert cfg.rpc_password == "123", "Mainnet btcd RPC password should be 123"
+    assert cfg.rpc_host == "0.0.0.0", "Mainnet btcd RPC host should be 0.0.0.0"
+    assert cfg.rpc_port == "0000", "Mainnet btcd RPC host should be 0000"
+
+    # test testnet with btcd
+    config["DEFAULT"]["network"] = "testnet"
+    cfg = utils.get_node_config()
+    assert cfg.network == "testnet", "Network should be testnet"
+    assert cfg.rpc_username == "btcdtestnet", "Testnet btcd username should be btcdtestnet"
+    assert cfg.rpc_password == "234", "Testnet btcd RPC password should be 234"
+    assert cfg.rpc_host == "1.1.1.1", "Testnet btcd RPC host should be 1.1.1.1"
+    assert cfg.rpc_port == "1111", "Testnet btcd RPC host should be 1111"
+
+    # test mainnet with bitcoind (core)
+    config["DEFAULT"]["bitcoin_node"] = "bitcoind"
+    config["DEFAULT"]["network"] = "mainnet"
+    cfg = utils.get_node_config()
+    assert cfg.bitcoin_node == "bitcoind", "Node should be bitcoind"
+    assert cfg.network == "mainnet", "Network should be mainnet"
+    assert cfg.rpc_username == "bitcoindmainnet", "Mainnet core username should be bitcoindmainnet"
+    assert cfg.rpc_password == "345", "Mainnet core RPC password should be 345"
+    assert cfg.rpc_host == "2.2.2.2", "Mainnet core RPC host should be 2.2.2.2"
+    assert cfg.rpc_port == "2222", "Mainnet core RPC host should be 2222"
+    assert cfg.bitcoind_rpc_use_https == "false", "Should not use https"
+    assert cfg.bitcoind_zmqpubrawblock == "tcp://127.0.0.1:39000main"
+    assert cfg.bitcoind_zmqpubrawtx == "tcp://127.0.0.1:39000main"
+
+    # test testnet with bitcoind (core)
+    config["DEFAULT"]["network"] = "testnet"
+    cfg = utils.get_node_config()
+    assert cfg.bitcoin_node == "bitcoind", "Node should be bitcoind"
+    assert cfg.network == "testnet", "Network should be testnet"
+    assert cfg.rpc_username == "bitcoindtestnet", "Testnet core username should be bitcoindtestnet"
+    assert cfg.rpc_password == "456", "Testnet core RPC password should be 456"
+    assert cfg.rpc_host == "3.3.3.3", "Testnet core RPC host should be 3.3.3.3"
+    assert cfg.rpc_port == "3333", "Testnet core RPC host should be 3333"
+    assert cfg.bitcoind_rpc_use_https == "false", "Should not use https"
+    assert cfg.bitcoind_zmqpubrawblock == "tcp://127.0.0.1:39000test"
+    assert cfg.bitcoind_zmqpubrawtx == "tcp://127.0.0.1:39000test"
