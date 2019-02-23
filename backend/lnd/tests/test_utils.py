@@ -5,7 +5,7 @@ import pytest
 from mixer.backend.django import mixer
 
 import backend.lnd.utils as utils
-from backend.lnd.models import LNDWallet, IPAddress
+from backend.lnd.models import IPAddress, LNDWallet
 from backend.test_utils.utils import fake_lnd_wallet_config, raise_error
 
 pytestmark = pytest.mark.django_db
@@ -219,3 +219,39 @@ def test_get_node_config(monkeypatch):
     assert cfg.bitcoind_rpc_use_https == "false", "Should not use https"
     assert cfg.bitcoind_zmqpubrawblock == "tcp://127.0.0.1:39000test"
     assert cfg.bitcoind_zmqpubrawtx == "tcp://127.0.0.1:39000test"
+
+
+def fake_open_channel(rpc_server, rpc_port, cert_path, macaroon_path,
+                      is_async):
+    # avoid building a real channel
+    return utils.ChannelData(
+        channel="Channel with {}".format(rpc_server),
+        macaroon="Macaroon",
+        error=None)
+
+
+def test_channel_cache_class(monkeypatch):
+    cache = utils.ChannelCache()
+    monkeypatch.setattr(cache, "_open_channel", fake_open_channel)
+    channel_data = cache.get("1.1.1.1", "1337", "/some/macaroon",
+                             "/another/path", False)
+    assert channel_data.channel == "Channel with 1.1.1.1", "Should return the correct channel"
+
+    # patch the cache so we can test if we really receive
+    # a cached channel instead of a newly created channel
+    monkeypatch.setattr(
+        cache,
+        "_cache",
+        {
+            list(cache._cache.keys())[0]:
+            utils.ChannelData(
+                channel="Channel with 1.1.1.1 patched",
+                macaroon="Macaroon",
+                error=None)
+        },
+    )
+
+    channel_data = cache.get("1.1.1.1", "1337", "/some/macaroon",
+                             "/another/path", False)
+    assert channel_data.channel == "Channel with 1.1.1.1 patched", \
+        "Should return the channel from cache which was patched"

@@ -5,6 +5,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import codecs
 import collections
 import configparser
+import hashlib
+import logging
 import os
 import subprocess
 
@@ -17,6 +19,8 @@ from backend.lnd.models import IPAddress
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read("config.ini")
+
+LOGGER = logging.getLogger(__name__)
 
 ChannelData = collections.namedtuple('ChannelData',
                                      ['channel', 'macaroon', 'error'])
@@ -51,6 +55,98 @@ BTCNodeConfig = collections.namedtuple(
     ])
 
 
+class ChannelCache():
+    """ChannelCache opens and caches opened gRPC channels.
+
+    Use get() to retrieve the channel.
+
+    The gRPC Channel class documentation states that gRPC
+    will try to reconnect upon failure.
+
+    lru_cache is not used to avoid premature channel closing
+    """
+
+    def __init__(self):
+        self._cache = {}
+
+    def get(self, rpc_server, rpc_port, cert_path, macaroon_path,
+            is_async) -> ChannelData:
+        """Gets a channel for the given parameters. If there is no 
+        active channel in the cache it'll open transparently one 
+        for the caller.
+
+        Args:
+            rpc_server: rpc server address
+            rpc_port: rpc server port
+            cert_path: path to the certificate
+            macaroon_path: path to the macaroon file
+            is_async: whether this channel should by an async channel
+
+        Returns:
+            A ChannelData object
+        """
+
+        hash_str = "{}-{}-{}-{}-{}".format(rpc_server, rpc_port, cert_path,
+                                           macaroon_path, is_async)
+        _hash = hashlib.md5(hash_str.encode("utf-8")).hexdigest()
+        try:
+            # check if channel exists
+            channel_data = self._cache[_hash]
+            return channel_data
+        except KeyError:
+            # channel does not yet exist, open it
+            channel_data = self._open_channel(rpc_server, rpc_port, cert_path,
+                                              macaroon_path, is_async)
+            self._cache[_hash] = channel_data
+            LOGGER.info("New channel opened. Cache size: %s", len(self._cache))
+            return channel_data
+
+    def _open_channel(self, rpc_server, rpc_port, cert_path, macaroon_path,
+                      is_async) -> ChannelData:
+        try:
+            macaroon = ""
+            if macaroon_path is not None:
+                with open(macaroon_path, 'rb') as f:
+                    macaroon_bytes = f.read()
+                    macaroon = codecs.encode(macaroon_bytes, 'hex')
+
+            rpc_url = "{}:{}".format(rpc_server, rpc_port)
+
+            cert = open(cert_path, "rb").read()
+        except FileNotFoundError as file_error:
+            print(file_error)
+            return ChannelData(
+                channel=None,
+                macaroon=None,
+                error=ServerError(error_message=str(file_error)))
+
+        try:
+            if is_async:
+                creds = aiogrpc.ssl_channel_credentials(cert)
+                channel = aiogrpc.secure_channel(rpc_url, creds)
+            else:
+                creds = grpc.ssl_channel_credentials(cert)
+                channel = grpc.secure_channel(rpc_url, creds)
+                grpc.channel_ready_future(channel).result(timeout=2)
+
+        except grpc.RpcError as exc:
+            # pylint: disable=E1101
+            print(exc)
+            return ChannelData(
+                channel=None,
+                macaroon=None,
+                error=ServerError.generic_rpc_error(exc.code(), exc.details()))
+        except grpc.FutureTimeoutError as exc:
+            print(exc)
+            return ChannelData(
+                channel=None, macaroon=None, error=WalletInstanceNotRunning())
+
+        return ChannelData(channel=channel, macaroon=macaroon, error=None)
+
+
+CHANNEL_CACHE = ChannelCache()
+
+
 def build_grpc_channel_manual(rpc_server,
                               rpc_port,
                               cert_path,
@@ -58,46 +154,8 @@ def build_grpc_channel_manual(rpc_server,
                               is_async=False) -> ChannelData:
     """Opens a grpc channel and returns the data as part of the ChannelData
     object. If an error occurs, ChannelData.error will not be None."""
-
-    try:
-        macaroon = ""
-        if macaroon_path is not None:
-            with open(macaroon_path, 'rb') as f:
-                macaroon_bytes = f.read()
-                macaroon = codecs.encode(macaroon_bytes, 'hex')
-
-        rpc_url = "{}:{}".format(rpc_server, rpc_port)
-
-        cert = open(cert_path, "rb").read()
-    except FileNotFoundError as file_error:
-        print(file_error)
-        return ChannelData(
-            channel=None,
-            macaroon=None,
-            error=ServerError(error_message=str(file_error)))
-
-    try:
-        if is_async:
-            creds = aiogrpc.ssl_channel_credentials(cert)
-            channel = aiogrpc.secure_channel(rpc_url, creds)
-        else:
-            creds = grpc.ssl_channel_credentials(cert)
-            channel = grpc.secure_channel(rpc_url, creds)
-            grpc.channel_ready_future(channel).result(timeout=2)
-
-    except grpc.RpcError as exc:
-        # pylint: disable=E1101
-        print(exc)
-        return ChannelData(
-            channel=None,
-            macaroon=None,
-            error=ServerError.generic_rpc_error(exc.code(), exc.details()))
-    except grpc.FutureTimeoutError as exc:
-        print(exc)
-        return ChannelData(
-            channel=None, macaroon=None, error=WalletInstanceNotRunning())
-
-    return ChannelData(channel=channel, macaroon=macaroon, error=None)
+    return CHANNEL_CACHE.get(rpc_server, rpc_port, cert_path, macaroon_path,
+                             is_async)
 
 
 def build_lnd_wallet_config(pk) -> LNDWalletConfig:
