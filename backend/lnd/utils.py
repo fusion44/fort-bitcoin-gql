@@ -69,8 +69,8 @@ class ChannelCache():
     def __init__(self):
         self._cache = {}
 
-    def get(self, rpc_server, rpc_port, cert_path, macaroon_path,
-            is_async) -> ChannelData:
+    def get(self, rpc_server, rpc_port, cert_path, macaroon_path, is_async,
+            rebuild) -> ChannelData:
         """Gets a channel for the given parameters. If there is no 
         active channel in the cache it'll open transparently one 
         for the caller.
@@ -81,6 +81,7 @@ class ChannelCache():
             cert_path: path to the certificate
             macaroon_path: path to the macaroon file
             is_async: whether this channel should by an async channel
+            rebuild: whether the channel should be rebuild
 
         Returns:
             A ChannelData object
@@ -92,13 +93,25 @@ class ChannelCache():
         try:
             # check if channel exists
             channel_data = self._cache[_hash]
+
+            if rebuild:
+                channel_data.channel.close()
+                raise KeyError
+
             return channel_data
         except KeyError:
             # channel does not yet exist, open it
             channel_data = self._open_channel(rpc_server, rpc_port, cert_path,
                                               macaroon_path, is_async)
-            self._cache[_hash] = channel_data
-            LOGGER.info("New channel opened. Cache size: %s", len(self._cache))
+            if channel_data.channel and channel_data.error is None:
+                # only add channels in case there was no error
+                self._cache[_hash] = channel_data
+                if rebuild:
+                    LOGGER.info("Rebuild an existing channel")
+                else:
+                    LOGGER.info("New channel opened. Cache size: %s",
+                                len(self._cache))
+
             return channel_data
 
     def _open_channel(self, rpc_server, rpc_port, cert_path, macaroon_path,
@@ -151,11 +164,12 @@ def build_grpc_channel_manual(rpc_server,
                               rpc_port,
                               cert_path,
                               macaroon_path=None,
-                              is_async=False) -> ChannelData:
+                              is_async=False,
+                              rebuild=False) -> ChannelData:
     """Opens a grpc channel and returns the data as part of the ChannelData
     object. If an error occurs, ChannelData.error will not be None."""
     return CHANNEL_CACHE.get(rpc_server, rpc_port, cert_path, macaroon_path,
-                             is_async)
+                             is_async, rebuild)
 
 
 def build_lnd_wallet_config(pk) -> LNDWalletConfig:

@@ -141,11 +141,13 @@ def start_daemon_mutation(wallet: LNDWallet,
     # it's fully operational
     time.sleep(5)
 
+    # Unlocking the wallet requires a rebuild of the channel
     channel_data = build_grpc_channel_manual(
         rpc_server="127.0.0.1",
         rpc_port=cfg.rpc_listen_port_ipv4,
         cert_path=cfg.tls_cert_path,
-        macaroon_path=cfg.admin_macaroon_path)
+        macaroon_path=cfg.admin_macaroon_path,
+        rebuild=True)
 
     if channel_data.error is not None:
         return channel_data.error
