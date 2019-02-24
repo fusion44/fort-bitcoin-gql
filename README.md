@@ -1,6 +1,8 @@
 # Bitcoin CLI GraphQL API
 
-The GraphQL server for the Fort Bitcoin project.
+The GraphQL server for the Fort Bitcoin project. This server aims to make it simpler to run and manage a Bitcoin full node and multiple Lightning nodes for multiple users.
+
+There is an [App](https://github.com/fusion44/fort-bitcoin-app) in development to accompany the component.
 
 ## Prerequisites
 
