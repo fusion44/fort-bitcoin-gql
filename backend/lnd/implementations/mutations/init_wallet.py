@@ -144,7 +144,7 @@ def init_wallet_mutation(wallet: LNDWallet, wallet_password: str,
         # LND requires some time seconds to startup.
         # So, check until the macaroon files exist and then return
         # TODO: find a better solution to this
-        file = pathlib.Path(cfg.read_only_macaroon_path)
+        file = pathlib.Path(cfg.admin_macaroon_path)
         while 1:
             if file.is_file():
                 break
