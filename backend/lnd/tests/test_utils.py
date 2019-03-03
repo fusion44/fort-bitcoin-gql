@@ -234,7 +234,7 @@ def test_channel_cache_class(monkeypatch):
     cache = utils.ChannelCache()
     monkeypatch.setattr(cache, "_open_channel", fake_open_channel)
     channel_data = cache.get("1.1.1.1", "1337", "/some/macaroon",
-                             "/another/path", False)
+                             "/another/path", False, False)
     assert channel_data.channel == "Channel with 1.1.1.1", "Should return the correct channel"
 
     # patch the cache so we can test if we really receive
@@ -252,6 +252,6 @@ def test_channel_cache_class(monkeypatch):
     )
 
     channel_data = cache.get("1.1.1.1", "1337", "/some/macaroon",
-                             "/another/path", False)
+                             "/another/path", False, False)
     assert channel_data.channel == "Channel with 1.1.1.1 patched", \
         "Should return the channel from cache which was patched"
